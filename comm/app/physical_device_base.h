@@ -8,7 +8,7 @@
 // This type is for phy_device definition
 
 // + 0-3, 
-typedef union _tag_phy_state
+typedef union _tag_phy_state_t
 {
 	struct
 	{
@@ -17,7 +17,7 @@ typedef union _tag_phy_state
 	}bits;
 
 	uint32_t all;
-};
+} phy_state_t;
 
 // ready <-> preop <-> online <-> buzy
 //  ^                     |
@@ -33,6 +33,11 @@ typedef union _tag_phy_state
 
 #pragma endregion
 
+
+#define PHY_CMD_NULL			(0x00)
+#define PHY_CMD_RESET			(0x01)
+#define PHY_CMD_INIT			(0x02)
+#define PHY_CMD_SHUTDOWN		(0x03)
 
 
 #pragma region ErrorCode
@@ -71,13 +76,34 @@ public:
 
 public:
 	/**
+	 * @brief This function could pass a command.
+	 * @param cmd the command.
+	 * @return if the command is done corrected.
+	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @date   : 20230606
+	 */
+	virtual gmp_ptrdiff_t command(uint32_t cmd);
+
+	/**
+	 * @brief This function could pass a command.
+	 * @param cmd the command.
+	 * @param wparam the word parameter
+	 * @param lparam the long ptr parameter
+	 * @return if the command is done corrected.
+	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @date   : 20230606
+	 */
+	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+
+public:
+	/**
 	 * @brief This fucntion attach device handle to the physical device.
 	 * @param dev the device to be attached.
 	 * @return the state of the function
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230703
 	 */
-	virtual gmp_status_t attach(io_device_base* dev);
+	gmp_status_t attach(io_device_base* dev);
 
 	/**
 	 * @brief This fucntion attach device handle to the physical device.
@@ -100,6 +126,7 @@ typedef struct _tag_dev_record_t
 
 	// memory space & local mapping.
 	uint32_t value;
+	uint8_t v_length;
 
 	// The command retriving the value
 	uint32_t cmd;
@@ -117,7 +144,11 @@ public:
 	{
 		records = nullptr;
 		record_len = 0;
+		addr = 0x0000;
 	}
+
+	~record_dev()
+	{}
 
 public:
 	gmp_status_t push(gmp_size_t n);
@@ -129,6 +160,26 @@ public:
 public:
 	// kernal virtual function
 
+	/**
+	 * @brief This function could pass a command.
+	 * @param cmd the command.
+	 * @return if the command is done corrected.
+	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @date   : 20230606
+	 */
+	virtual gmp_ptrdiff_t command(uint32_t cmd);
+
+	/**
+	 * @brief This function could pass a command.
+	 * @param cmd the command.
+	 * @param wparam the word parameter
+	 * @param lparam the long ptr parameter
+	 * @return if the command is done corrected.
+	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @date   : 20230606
+	 */
+	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+
 
 public:
 	// utilities
@@ -137,4 +188,5 @@ public:
 	// members
 	dev_record_t *records;
 	uint32_t record_len;
+	gmp_ptraddr_t addr;
 };
