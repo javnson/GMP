@@ -5,6 +5,9 @@
 #include <./basic/gmp_base.h>
 #include <./basic/uuid.h>
 
+#ifndef _FILE_COMM_BASIC_H_
+#define _FILE_COMM_BASIC_H_
+
 // communication classes Universally Unique IDentifiers
 //#define UUID_IO_DEVICE_BASE { 0xb18a,0xbc1c,0xf9aa,0x4634,0x944a,0x39b7,0xdcef,0xe829 }
 #define UUID_IO_DEVICE_UART { 0xb663,0x087d,0x5661,0x475c,0xb85e,0x939e,0xa806,0x0c99 }
@@ -714,3 +717,5 @@ gmp_ptrdiff_t put_format_string(io_device_base* device, gmp_ptraddr_t addr, cons
 
 
 #endif // end of _DISABLE_UTILITY
+
+#endif // _FILE_COMM_BASIC_H_
