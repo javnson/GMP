@@ -6,8 +6,74 @@
 // platforms
 #include <./comm/comm_basic.h>
 
-gmp_ptrdiff_t io_device_base::read(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+
+//////////////////////////////////////////////////////////////////////////
+// cmd_device
+gmp_stat_t cmd_device::cmd(uint32_t cmd)
 {
+
+
+	// When the function are called, the command is an absolutely unknown command.
+	return GMP_STATUS_UNKNOWN_CMD;
+}
+
+gmp_stat_t cmd_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
+{
+	// When the function are called, the command is an absolutely unknown command.
+	return GMP_STATUS_UNKNOWN_CMD;
+
+}
+
+uint32_t cmd_device::get_device_usage_label()
+{
+	return m_device_usage_label;
+}
+
+void cmd_device::clear_error_cnt()
+{
+	m_error_cnt = 0;
+	m_warn_cnt = 0;
+	warn_free = 0;
+}
+
+void cmd_device::set_verbose(uint8_t verbose)
+{
+	this->verbose = verbose;
+}
+
+void cmd_device::error(uint32_t errcode)
+{
+	// If this is a fatal error
+	if (errcode & DEVICE_ERRO_BEGIN != 0)
+	{
+		m_error_cnt += 1;
+		m_last_error = errcode;
+		return 1;
+	}
+	// if this is a warning
+	else
+	{
+		m_warn_cnt += 1;
+		m_last_error = errcode;
+		return 0;
+	}
+}
+
+void cmd_device::error_release()
+{
+	error_free = 0;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// io_device_base
+gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+{
+	gmp_assert(data != nullptr);
+
+	// boundary case
+	if (length == 0)
+		return 0;
+
 	// judge if the condition is meet
 
 	// Condition 1: read the device is permitted.
@@ -41,8 +107,15 @@ gmp_ptrdiff_t io_device_base::read(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data
 	return read_ex(addr, data, length);
 }
 
-gmp_ptrdiff_t io_device_base::write(_IN gmp_ptraddr_t addr, _IN gmp_data_t* data, gmp_size_t length)
+gmp_ptrdiff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_size_t length)
 {
+	gmp_assert(data != nullptr);
+
+	// boundary case
+	// NOTE: is this safe
+	if (length == 0)
+		return 0;
+
 	// judge if the condition is meet
 
 	// Condition 1: write the device is permitted.
@@ -77,7 +150,7 @@ gmp_ptrdiff_t io_device_base::write(_IN gmp_ptraddr_t addr, _IN gmp_data_t* data
 
 }
 
-void io_device_base::refuse(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+void io_device_base::refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
 	// print function 
 	if (m_state.bits.verbose >= DEVICE_STATE_VERBOSE_2)
@@ -86,7 +159,7 @@ void io_device_base::refuse(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_s
 	}
 }
 
-gmp_ptrdiff_t io_device_base::command(uint32_t cmd)
+gmp_diff_t io_device_base::command(uint32_t cmd)
 {
 	// More emergency, more ahead
 	switch (cmd)
@@ -130,7 +203,7 @@ gmp_ptrdiff_t io_device_base::command(uint32_t cmd)
 	return GMP_STATUS_OK;
 }
 
-gmp_ptrdiff_t io_device_base::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t io_device_base::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	switch (cmd)
 	{
@@ -164,14 +237,14 @@ gmp_ptrdiff_t io_device_base::command(uint32_t cmd, gmp_param_t wparam, gmp_ptra
 	return GMP_STATUS_OK;
 }
 
-gmp_ptrdiff_t io_device_base::read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+gmp_ptrdiff_t io_device_base::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
 	memcpy((void*)addr, (void*)data, length);
 
 	return length;
 }
 
-gmp_ptrdiff_t io_device_base::write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+gmp_ptrdiff_t io_device_base::write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
 	memcpy((void*)data, (void*)addr, length);
 
@@ -225,7 +298,7 @@ void io_device_base::shutdown()
 
 // SPI device
 
-gmp_ptrdiff_t spi_device::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t spi_device::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 
 	return io_device_base::command(cmd, wparam, lparam);
@@ -242,7 +315,7 @@ gmp_ptrdiff_t uart_device::command(uint32_t cmd)
 	return io_device_base::command(cmd);
 }
 
-gmp_ptrdiff_t uart_device::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t uart_device::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	return io_device_base::command(cmd, wparam, lparam);
 }
@@ -252,7 +325,7 @@ gmp_ptrdiff_t i2c_device::command(uint32_t cmd)
 	return io_device_base::command(cmd);
 }
 
-gmp_ptrdiff_t i2c_device::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t i2c_device::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	return io_device_base::command(cmd, wparam, lparam);
 }

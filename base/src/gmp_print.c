@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 // platform includes
-#include <./basic/gmp_base.h>
+#include <base/gmp_base.h>
 
 
 __weak void gmp_dbg_write_default(_IN const gmp_data_t* content, _IN gmp_size_t len)
@@ -19,7 +19,7 @@ __weak void gmp_dbg_write_default(_IN const gmp_data_t* content, _IN gmp_size_t 
 // implement of pointer
 void (*dbg_write)(const gmp_data_t* content, gmp_size_t length) = gmp_dbg_write_default;
 
-gmp_status_t gmp_print(_IN const gmp_data_t* content, ...)
+__weak gmp_status_t gmp_print(_IN const gmp_data_t* content, ...)
 {
 	char str[SHOW_BUF_LEN];
 	gmp_size_t len;
@@ -36,8 +36,12 @@ gmp_status_t gmp_print(_IN const gmp_data_t* content, ...)
 	return GMP_STATUS_OK;
 }
 
-uint16_t gmp_assert_print(_IN const gmp_data_t* msg, _IN const gmp_data_t* filepath, _IN gmp_size_t line)
+__weak uint16_t gmp_assert_print(_IN const gmp_data_t* msg, _IN const gmp_data_t* filepath, _IN gmp_size_t line)
 {
-	gmp_print(_TEXT("In file [%s:%ld] assert occured!\r\n[ERROR] %s"), filepath, line, msg);
+	gmp_print(_TEXT("In file [%s:%ld] assert occurred!\r\n[ERROR] %s"), filepath, line, msg);
+
+#ifndef DISABLE_GMP_ASSERT_ABORT
+	gmp_abort();
+#endif
 	return 1;
 }

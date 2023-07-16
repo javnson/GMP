@@ -30,11 +30,11 @@ typedef union _tag_device_state
 	struct
 	{
 		uint32_t state_machine : 4;
-		uint32_t characters : 4;
+//		uint32_t characters : 4;
+//		uint32_t lock : 4;
 		uint32_t roles : 4;
-		uint32_t lock : 2;
-		uint32_t warning : 1;
-		uint32_t verbose : 2;
+		//uint32_t warning : 1;
+		//uint32_t verbose : 2;
 		uint32_t pnp : 4;
 		uint32_t rpc : 4;
 	}bits;
@@ -42,14 +42,17 @@ typedef union _tag_device_state
 	uint32_t all;
 }gmp_device_state_t;
 
-// ready <-> buzy
+
+
+// ready <-> busy
 // gmp_device_state_t::bits::state_machine provides 4 inner states
 #define DEVICE_STATE_SHUTDOWN       (0x00) // Power-Off
-#define DEVICE_STATE_READY          (0x01) // ready to be buzy
-#define DEVICE_STATE_BUZY           (0X02) // running receiving or transmitting
-#define DEVICE_STATE_ERROR          (0x03) // meet a fatal error, need to be re initialization
-#define DEVICE_STATE_RUNTIME_ERROR  (0x04) // meet a runtime error, should reset error reg, and then ready again
-#define DEVICE_STATE_LOWPOWER       (0x05) // lowpower mode, waiting to be weakup, and then ready
+#define DEVICE_STATE_CONFIG         (0x01) // Preparing & config
+#define DEVICE_STATE_READY          (0x02) // ready to be busy
+#define DEVICE_STATE_BUZY           (0X03) // running receiving or transmitting
+//#define DEVICE_STATE_ERROR          (0x03) // meet a fatal error, need to be re initialization
+//#define DEVICE_STATE_RUNTIME_ERROR  (0x04) // meet a runtime error, should reset error reg, and then ready again
+#define DEVICE_STATE_LOWPOWER       (0x04) // low-power mode, waiting to be weak up, and then ready
 
 
 // gmp_device_state_t::bits::characters provides 4 inner characters.
@@ -57,6 +60,8 @@ typedef union _tag_device_state
 #define DEVICE_STATE_CHAR_W         (0x01)
 #define DEVICE_STATE_CHAR_R         (0x02)
 #define DEVICE_STATE_CHAR_C         (0x04)
+#define DEVICE_STATE_CHAR_I         (0x08) // init, reset, halt
+#define DEVICE_STATE_CHAR_PNP       (0X10) // 
 //#define DEVICE_STATE_CHAR_R         (0x08)
 
 // gmp_device_state_t::bits::roles
@@ -64,6 +69,7 @@ typedef union _tag_device_state
 #define DEVICE_STATE_ROLE_MASTER	(0x01)
 #define DEVICE_STATE_ROLE_SLAVE		(0x02)
 #define DEVICE_STATE_ROLE_MGR		(0x03)
+#define DEVICE_STATE_ROLE_SPECIAL   (0x04)
 
 // gmp_device_state_t::bits::lock
 #define DEVICE_STATE_LOCK_DISABLE   (0x00)
@@ -102,10 +108,11 @@ typedef uint32_t gmp_device_cmd;
 #define DEVICE_CMD_RESET	(0x01)
 #define DEVICE_CMD_INIT     (0x02)
 #define DEVICE_CMD_SHUTDOWN (0x03)
-#define DEVICE_CMD_LOCK     (0x04)
-#define DEVICE_CMD_UNLOCK   (0x05)
-#define DEVICE_CMD_VERBOSE  (0x06) // Set verbose level
-#define DEVICE_CMD_REGISTER (0x07)
+#define DEVICE_CMD_LOWPOWER (0x04)
+#define DEVICE_CMD_LOCK     (0x05)
+#define DEVICE_CMD_UNLOCK   (0x06)
+#define DEVICE_CMD_VERBOSE  (0x07) // Set verbose level
+#define DEVICE_CMD_REGISTER (0x08)
 
 // PNP Command
 #define DEVICE_CMD_PNP_TEST  (0x10) // Test a PnP device if it is connected to the master
@@ -136,48 +143,206 @@ typedef uint32_t gmp_device_cmd;
 // Error Code Definition
 #pragma region ErrorCode
 // io_device_base error code definition
+#define DEIVCE_OK                     (0x0000)
+
+#define DEVICE_WARN_BEGIN          (0x00000001)
+#define DEVICE_ERRO_BEGIN          (0X80000000)
 
 // unsupported operation happened
-#define DEVICE_ERR_UNSUPPORT_R        (0x0010)
-#define DEVICE_ERR_UNSUPPORT_W        (0x0011)
-#define DEVICE_ERR_UNSUPPORT_C        (0x0012)
-#define DEVICE_ERR_LOCKED             (0x0013)
-#define DEVICE_ERR_NOT_READY          (0x0014)
-#define DEVICE_ERR_MEMORY_UNAVAILABLE (0x0015)
-#define DEVICE_ERR_UNKNOWN_CMD		  (0x0016)
-#define DEVICE_ERR_UNKNOWN_CMDEX	  (0x0017)
-#define DEIVCE_ERR_BAD_CMD			  (0x0018)
-#define DEVICE_ERR_CANNOT_INIT	      (0x0019)
-#define DEVICE_RECOVER_FROM_ERROR     (0x001A)
-#define DEVICE_RECOVER_FROM_RUNTIME   (0x001B)
-#define DEVICE_ERR_TIMEOUT			  (0x001C)
+// You may change WARN and ERRO to define if the error is fatal.
+#define DEVICE_ERR_UNSUPPORT_R        (DEVICE_WARN_BEGIN + 0x0010)
+#define DEVICE_ERR_UNSUPPORT_W        (DEVICE_WARN_BEGIN + 0x0011)
+#define DEVICE_ERR_UNSUPPORT_C        (DEVICE_WARN_BEGIN + 0x0012)
+#define DEVICE_ERR_LOCKED             (DEVICE_WARN_BEGIN + 0x0013)
+#define DEVICE_ERR_NOT_READY          (DEVICE_WARN_BEGIN + 0x0014)
+#define DEVICE_ERR_MEMORY_UNAVAILABLE (DEVICE_ERRO_BEGIN + 0x0015)
+#define DEVICE_UNKNOWN_CMD   		  (DEVICE_WARN_BEGIN + 0x0016)
+#define DEVICE_UNKNOWN_CMDEX	      (DEVICE_WARN_BEGIN + 0x0017)
+#define DEIVCE_ERR_BAD_CMD			  (DEVICE_WARN_BEGIN + 0x0018)
+#define DEVICE_ERR_CANNOT_INIT	      (DEVICE_ERRO_BEGIN + 0x0019)
+#define DEVICE_RECOVER_FROM_ERROR     (DEVICE_WARN_BEGIN + 0x001A)
+#define DEVICE_ERR_TIMEOUT			  (DEVICE_WARN_BEGIN + 0x001B)
 
-#define DEVICE_ERR_HAL				  (0x00FF)
+#define DEVICE_ERR_ASSERT             (DEVICE_ERRO_BEGIN + 0x00FE)
+#define DEVICE_ERR_HAL				  (DEVICE_WARN_BEGIN + 0x00FF)
+
 // fatal errors definition
-#define DEIVCE_IVALID_OPER			  (GMP_STATUS_FATAL_ERROR+0x01)
+//#define DEIVCE_IVALID_OPER			  (GMP_STATUS_FATAL_ERROR+0x01)
 #pragma endregion ErrorCode
+
+
+#pragma region Tool_Macros
+#define RESPONSE_CMD     public:                  \
+		virtual gmp_stat_t command(uint32_t cmd); \
+		virtual gmp_stat_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
+
+
+#pragma endregion Tool_Macros
+
+// General classes definition
+#pragma region CMD_DEVICE
+// @brief This class is the base class of all the others.
+//        This class provided a set of basic virtual function, named cmd.
+//        All the derive class should support cmd mode.
+//        And the cmd mode is the key method for RPC.
+class cmd_device
+{
+public:
+	// ctor & dtor
+	cmd_device()
+	{
+		m_device_usage_label = 0;
+		m_last_error = DEIVCE_OK;
+		m_error_cnt = 0;
+		m_warn_cnt = 0;
+		error_free = 0;
+		warn_free = 0;
+		verbose = DEVICE_STATE_VERBOSE_1;
+	}
+	~cmd_device()
+	{
+
+	}
+
+protected:
+	// Unique identifier
+	// This field tells user the usage of the device(class).
+	uint32_t m_device_usage_label;
+
+public:
+	// error control
+	uint32_t m_last_error;
+
+	// the counter of error
+	gmp_fast_t m_error_cnt;
+
+	// the counter of warning
+	gmp_fast_t m_warn_cnt;
+
+protected:
+	// 0 no error happen, the device is running normally.
+	// 1 error happened, you should recover from error first.
+	uint8_t error_free : 1;
+	
+	// 0 no warning happen, 1 warning is triggered and you may choose to ignore.
+	uint8_t warn_free : 1;
+
+	// Set the verbose level of the device.
+	// the higher value, the more verbose.
+	uint8_t verbose : 2;
+
+public:
+	// kernel virtual function
+	/**
+	 * @brief This function could execute a command.
+	 * @param cmd the command.
+	 * @return if the command is done corrected.
+	 * @note If you need to test if command is running correctly, please send Null command.
+	 *       If you get Null command print, that's the correct answer.
+	 * @author : Javnson
+	 * @date   : 20230606
+	 */
+	virtual gmp_stat_t cmd(uint32_t cmd) = 0;
+
+	/**
+	 * @brief This function could execute a command.
+	 * @param cmd the command.
+	 * @param wparam the word parameter
+	 * @param lparam the long ptr parameter
+	 * @return if the command is done corrected.
+	 * @note If you need to test if command is running correctly, please send Null command.
+			 If you get Null command print, that's the correct answer.
+	 * @author : Javnson
+	 * @date   : 20230606
+	 */
+	virtual gmp_stat_t cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam) = 0;
+
+public:
+	// utilities
+	/**
+	 * @brief This function may get device_usage_label.
+	 * @param null
+	 * @return device_usage_label
+	 * @author : Javnson
+	 * @date   : 20230716
+	 */
+	uint32_t get_device_usage_label();
+
+	/**
+	 * @brief This function set error counter to 0.
+	 *        Meanwhile this function set warn_free to 0.
+	 * @param null.
+	 * @return null.
+	 * @author : Javnson
+	 * @date   : 20230716
+	 */
+	void clear_error_cnt();
+
+	/**
+	 * @brief You may set verbose level by the function
+	 * @param null
+	 * @return null
+	 * @author : Javnson
+	 * @date   : 20230606
+	 */
+	void set_verbose(uint8_t verbose);
+	
+	/**
+	 * @brief You may get verbose level by the function
+	 * @param null
+	 * @return null
+	 * @author : Javnson
+	 * @date   : 20230606
+	 */
+	inline void get_verbose()
+	{
+		return this->verbose;
+	}
+
+protected:
+	/**
+	 * @brief This function trigger a warning or error.
+	 * @param error code
+	 * @return if the function should be terminated right now the function return 1, or the function returns 0.
+	 * @note This function will judge the errcode type is fatal or just warning.
+	 * @author : Javnson
+	 * @date   : 20230716
+	 */
+	gmp_fast_t error(uint32_t errcode);
+
+	/**
+	 * @brief This function may release the error state.
+	 * @param null.
+	 * @return null
+	 * @note DANGEROUS! This function should only be called when error disappeared.
+	 * @author : Javnson
+	 * @date   : 20230716
+	 */
+	void error_release();
+
+};
+
+
+#pragma endregion CMD_DEVICE
 
 
 // Main class definition
 #pragma region DeviceBase
 class io_device_base
+	:public cmd_device
 {
-public:
-	uuid_t m_uuid;
-	gmp_errcode_t last_err;
 protected:
 	void* m_dba; // device base address
 	gmp_device_state_t m_state;
 
+
+	uint16_t character;
+	uint16_t lock;
+
 public:
 	// ctor & dtor
 	io_device_base()
-		//        :m_uuid(UUID_ZERO),last_err(0),
-		//        m_dba(nullptr),m_state(0)
 	{
-//		m_uuid.uuid = UUID_ZERO;
-
-		last_err = 0;
 		m_dba = NULL;
 		m_state.all = 0;
 
@@ -189,6 +354,21 @@ public:
 		m_state.bits.verbose = DEVICE_STATE_VERBOSE_1;
 		m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
 	}
+
+	io_device_base(void* dba)
+	{
+		m_dba = dba;
+
+		m_state.all = 0;
+		m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
+		m_state.bits.roles = DEVICE_STATE_ROLE_NULL;
+		m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
+		m_state.bits.rpc = DEVICE_STATE_RPC_DISABLE;
+
+		character = DEVICE_STATE_CHAR_NULL;
+
+
+	}
 	~io_device_base()
 	{}
 
@@ -199,20 +379,20 @@ public: // Core functions
 	 * @param data the pointer for data, which are treated as a read buffer
 	 * @param length the length of the data buffer
 	 * @return real length that been read
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	gmp_ptrdiff_t read(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	gmp_diff_t read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 	/**
 	 * @brief write a string of message for the device, which will call write_ex to fulfill the task.
 	 * @param addr the address for the device
 	 * @param data the pointer for data, which would be sent
 	 * @param length the length of the data buffer
 	 * @return real length that been written
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	gmp_ptrdiff_t write(_IN gmp_ptraddr_t addr, _IN gmp_data_t* data, gmp_size_t length);
+	gmp_diff_t write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief read a string of message from the device, which will call read_ex to fulfill the task.
@@ -220,10 +400,10 @@ public: // Core functions
 	 * @param data the pointer for data, which are treated as a read buffer
 	 * @param length the length of the data buffer
 	 * @return real length that been read
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	 //gmp_ptrdiff_t read(_OUT gmp_data_t* data, gmp_size_t length);
+	 //gmp_diff_t read(_OUT gmp_data_t* data, gmp_size_t length);
 	 /**
 	  * @brief write a string of message for the device, which will call write_ex to fulfill the task.
 	  *        based on the position of m_pos, you may change the position by seek.
@@ -231,34 +411,13 @@ public: // Core functions
 	  * @param data the pointer for data, which would be sent
 	  * @param length the length of the data buffer
 	  * @return real length that been written
-	  * @author : Javnson(javnson@zju.edu.cn)
+	  * @author : Javnson
 	  * @date   : 20230605
 	  */
-	  //gmp_ptrdiff_t write(_OUT gmp_data_t* data, gmp_size_t length);
+	  //gmp_diff_t write(_OUT gmp_data_t* data, gmp_size_t length);
 
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @return if the command is done corrected.
-	 * @note If you need to test if command is running correctly, please send Null command.
-	 *       If you get Null command print, that's the correct answer.
-	 * @author : Javnson(javnson@zju.edu.cn)
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
-
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @param wparam the word parameter
-	 * @param lparam the long ptr parameter
-	 * @return if the command is done corrected.
-	 * @note If you need to test if command is running correctly, please send Null command.
-             If you get Null command print, that's the correct answer.
-	 * @author : Javnson(javnson@zju.edu.cn)
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	// This class will implement the cmd function.
+	RESPONSE_CMD
 
 protected: // core virtual function
 	/**
@@ -269,20 +428,20 @@ protected: // core virtual function
 	 * @param data the pointer for data, which would be treated as a buffer
 	 * @param length the capacity of the buffer
 	 * @return the real length of the data buffer
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 	/**
 	 * @brief write a string of message for the device, which will call write_ex to fulfill the task.
 	 * @param addr the address for the device
 	 * @param data the pointer for data, which would be sent
 	 * @param length the length of the data buffer
 	 * @return real length that been written
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 	/**
 	 * @brief This function would be called, only if read or write are refused.
 	 *        When the device is locked, or the device don't support the method.
@@ -291,10 +450,10 @@ protected: // core virtual function
 	 * @param data the pointer to the TX&RX buffer
 	 * @param length the length of the buffer
 	 * @return real length that been written
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual void refuse(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual void refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 public:
 	/**
@@ -303,41 +462,43 @@ public:
 	 *        the function would be called, with the parameter of the factual read or write length.
 	 * @param realtive_pos the distance to be moved, related to the current position.
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	 //virtual void seek_ex(_IN gmp_ptrdiff_t relative_pos);
+	 //virtual void seek_ex(_IN gmp_diff_t relative_pos);
 
 	 // This member is default address for the device to read or write.
-	 //gmp_ptraddr_t m_pos;
+	 //gmp_addr_t m_pos;
 
 public:
-	// pheripheral fucntion
+	// peripheral function
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
 	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
 	 *		  This function would only change the state machine without any substantive operations.
 	 * @return if the command can't run correctly, the program would abort.
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230704
 	 */
 	virtual void init();
 
 	/**
 	 * @brief This function reset the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.	 *		  This function would only change the state machine without any substantive operations.
+	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
 	 *		  This function would only change the state machine without any substantive operations.
-	* @return if the command can't run correctly, the program would abort.
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 *		  This function would only change the state machine without any substantive operations.
+	 * @return if the command can't run correctly, the program would abort.
+	 * @author : Javnson
 	 * @date   : 20230704
 	 */
 	virtual void reset();
 
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.	 * @return if the command can't run correctly, the program would abort.
+	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
+	 * @return if the command can't run correctly, the program would abort.
 	 *		  This function would only change the state machine without any substantive operations.
-	* @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230704
 	 */
 	virtual void shutdown();
@@ -349,7 +510,7 @@ public:
 	 * @brief When error occurred, call the function.
 	 * @param null
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	inline void error(gmp_errcode_t error_code)
@@ -362,7 +523,7 @@ public:
 	 * @brief When warning occurred, call the function.
 	 * @param null
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	inline void warning(gmp_errcode_t error_code)
@@ -375,7 +536,7 @@ public:
 	 * @brief When error occurred, call the function.
 	 * @param null
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	inline void clear_warning()
@@ -387,7 +548,7 @@ public:
 	 * @brief You may set verbose level by the function
 	 * @param null
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	inline void set_verbose_level(uint16_t verbose)
@@ -399,7 +560,7 @@ public:
 	 * @brief You may get pnp state by the function.
 	 * @param null
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	inline uint32_t get_pnp_state()
@@ -411,7 +572,7 @@ public:
 	 * @brief Attach device base addr to device base address(DBA)
 	 * @param null
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	inline void attach(void* device_addr)
@@ -426,7 +587,7 @@ protected:
 	 * @brief This function should only be called when derived class need to lock the device.
 	 * @param null
 	 * @return null
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	 //inline void lock()
@@ -438,7 +599,7 @@ protected:
 	  * @brief This function should only be called when derived class need to unlock the device.
 	  * @param null
 	  * @return null
-	  * @author : Javnson(javnson@zju.edu.cn)
+	  * @author : Javnson
 	  * @date   : 20230606
 	  */
 	  //inline void unlock()
@@ -450,7 +611,7 @@ protected:
 	   * @brief This function may set pnp state.
 	   * @param null
 	   * @return null
-	   * @author : Javnson(javnson@zju.edu.cn)
+	   * @author : Javnson
 	   * @date   : 20230606
 	   */
 	inline void set_pnp_state(uint32_t pnp_state)
@@ -459,6 +620,8 @@ protected:
 	}
 
 };
+
+
 
 #pragma endregion DeviceBase
 
@@ -473,14 +636,14 @@ class uart_device :
 public:
 	uart_device()
 	{
-//		this->m_uuid = UUID_IO_DEVICE_UART;
+		//		this->m_uuid = UUID_IO_DEVICE_UART;
 		m_state.bits.characters = DEVICE_STATE_CHAR_R + DEVICE_STATE_CHAR_W;
 	}
 	/**
 	 * @brief Ctor with params, pass device address for the UART device.
 	 * @param device_addr is the device base address.
 	 * @return None
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	uart_device(void* device_addr)
@@ -501,10 +664,10 @@ protected:
 	 * @param data the pointer for data, which would be treated as a buffer
 	 * @param length the capacity of the buffer
 	 * @return the real length of the data buffer
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -512,20 +675,20 @@ protected:
 	 * @param data the pointer for data, which would be sent
 	 * @param length the length of the data buffer
 	 * @return real length that been written
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 public:
 	/**
 	 * @brief This function could pass a command.
 	 * @param cmd the command.
 	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
+	virtual gmp_diff_t command(uint32_t cmd);
 
 	/**
 	 * @brief This function could pass a command.
@@ -533,10 +696,10 @@ public:
 	 * @param wparam the word parameter
 	 * @param lparam the long ptr parameter
 	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	virtual gmp_diff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 
 protected:
@@ -556,7 +719,7 @@ public:
 	// ctor & dtor
 	i2c_device()
 	{
-//		m_uuid.uuid = UUID_IO_DEVICE_IIC;
+		//		m_uuid.uuid = UUID_IO_DEVICE_IIC;
 	}
 	~i2c_device()
 	{
@@ -575,7 +738,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -586,7 +749,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief This function could pass a command.
@@ -595,7 +758,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
+	virtual gmp_diff_t command(uint32_t cmd);
 
 	/**
 	 * @brief This function could pass a command.
@@ -606,32 +769,30 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	virtual gmp_diff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 
 public:
-	// service funcitons
+	// service functions
 	/**
 	 * @brief This function sets baud rate of i2c bus.
 	 * @param baud the target.
 	 * @return the last baud rate if done correctly, 0 otherwise.
-	 * @author : Javnson
-	 *			 Gqc
+	 * @author : Gqc
 	 * @date   : 20230714
 	 */
-	//virtual gmp_param_t set_baud(gmp_param_t baud);
-	
-	/**
-	 * @brief This function sends an acknowledge bit.
-	 * @param null
-	 * @return GMP_OK if done correctly, GMP_ERROR for other conditions.
-	 * @author : Javnson
-	 *			 Gqc
-	 * @date   : 20230714
-	 */
-	//virtual gmp_status_t ack();
+	 //virtual gmp_param_t set_baud(gmp_param_t baud);
 
-	 
+	 /**
+	  * @brief This function sends an acknowledge bit.
+	  * @param null
+	  * @return GMP_OK if done correctly, GMP_ERROR for other conditions.
+	  * @author : Gqc
+	  * @date   : 20230714
+	  */
+	  //virtual gmp_stat_t ack();
+
+
 
 };
 
@@ -663,10 +824,10 @@ public:
 	 * @param data the pointer for data, which would be treated as a buffer
 	 * @param length the capacity of the buffer
 	 * @return the real length of the data buffer
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -674,16 +835,16 @@ public:
 	 * @param data the pointer for data, which would be sent
 	 * @param length the length of the data buffer
 	 * @return real length that been written
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief This function could pass a command.
 	 * @param cmd the command.
 	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	virtual gmp_ptrdiff_t command(uint32_t cmd);
@@ -694,10 +855,10 @@ public:
 	 * @param wparam the word parameter
 	 * @param lparam the long ptr parameter
 	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 
 };
@@ -711,7 +872,7 @@ public:
 #ifndef GMP_DISABLE_DEVICE_UTILITY
 
 
-gmp_ptrdiff_t put_format_string(io_device_base* device, gmp_ptraddr_t addr, const gmp_data_t* p_fmt, ...);
+gmp_ptrdiff_t put_format_string(io_device_base* device, gmp_addr_t addr, const gmp_data_t* p_fmt, ...);
 
 
 
