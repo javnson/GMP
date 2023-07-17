@@ -5,7 +5,7 @@
 #ifndef _FILE_USERCONFIG_EXAMPLE_H_
 #define _FILE_USERCONFIG_EXAMPLE_H_
 
-//////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 // Step 1 General Motor Platform setup config
 
 
@@ -20,10 +20,16 @@
 // Please uncommon this line of macro.
 #define GMP_INIT_DEPOSIT 
 
-// Step 2 Disable or Enable some librarys
+// If you enable this macro when assert function are called, and the 
+// condition couldn't meet, the program would abort.
+#define DISABLE_GMP_ASSERT_ABORT
+
+//////////////////////////////////////////////////////////////////////////
+// Step 2 Disable or Enable some library
 
 
 
+//////////////////////////////////////////////////////////////////////////
 // Step 3 Add necessary headers here.
 
 

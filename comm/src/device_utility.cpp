@@ -14,7 +14,7 @@
 // There are utility function definitions
 #ifndef EM_DISABLE_DEVICE_UTILITY
 
-gmp_ptrdiff_t put_format_string(io_device_base* device, gmp_ptraddr_t addr, const char* p_fmt, ...)
+gmp_ptrdiff_t put_format_string(io_device_base* device, gmp_addr_t addr, const char* p_fmt, ...)
 {
 	char str[SHOW_BUF_LEN];
 	uint8_t len;

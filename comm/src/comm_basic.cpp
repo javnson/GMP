@@ -6,43 +6,166 @@
 // platforms
 #include <./comm/comm_basic.h>
 
-gmp_ptrdiff_t io_device_base::read(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+
+//////////////////////////////////////////////////////////////////////////
+// cmd_device
+gmp_stat_t cmd_device::cmd(uint32_t cmd)
 {
+
+
+	// When the function are called, the command is an absolutely unknown command.
+	return GMP_STATUS_UNKNOWN_CMD;
+}
+
+gmp_stat_t cmd_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
+{
+	// When the function are called, the command is an absolutely unknown command.
+	return GMP_STATUS_UNKNOWN_CMD;
+
+}
+
+uint32_t cmd_device::get_device_usage_label()
+{
+	return m_device_usage_label;
+}
+
+void cmd_device::clear_error_cnt()
+{
+	m_error_cnt = 0;
+	m_warn_cnt = 0;
+	warn_cond = 0;
+}
+
+void cmd_device::set_verbose(uint8_t verbose)
+{
+	this->verbose = verbose;
+}
+
+void cmd_device::error(uint32_t errcode)
+{
+	// NOTE return 1 to stop the process
+	//      return 0 to ignore the process
+	
+	// global information counter
+	g_info_cnt += 1;
+
+	// Part 1 Some special code
+		
+	// Some fatal error has happened, so user should figure them out first.
+	if (errcode == DEVICE_ERR_COND)
+	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_ERROR)
+			gmp_print("[erro.%d]\t device still in ERROR condition.\r\n",
+				g_info_cnt);
+
+		m_warn_cnt += 1;
+		return 1;
+	}
+
+	// Part 2 General error
+	if(errcde >= DEVICE_ERRO_BEGIN) // error
+	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_ERROR)
+			gmp_print("[erro.%d]\t general ERROR happened, error code: %d.\r\n",
+				g_info_cnt ,errcode);
+
+		m_error_cnt += 1;
+		m_last_error = errcode;
+		return 1;
+	}
+	else if (errcode >= DEVICE_WARN_BEGIN) // warning
+	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_WARNING)
+			gmp_print("[warn.%d]\t general WARNING happened, warning code: %d.\r\n", 
+				g_info_cnt, errcode);
+		
+		m_warn_cnt += 1;
+		m_last_error = errcode;
+		return 0;
+	}
+	else //info
+	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_INFO)
+			gmp_print("[info.%d]\t general INFO happened, info code: %d.\r\n",
+				g_info_cnt, errcode);
+
+		return 0;
+	}
+
+
+}
+
+void cmd_device::error_release()
+{
+	erro_cond = 0;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// io_device_base
+gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+{
+	gmp_assert(m_dba != nullptr);
+	gmp_assert(data != nullptr);
+
+
 	// judge if the condition is meet
 
-	// Condition 1: read the device is permitted.
-	if ((m_state.bits.characters & DEVICE_STATE_CHAR_R) == 0) // read oper is not permitted.	
+	// Condition 0: If any fatal error haven't been clear
+	if (erro_cond)
 	{
-		error(DEVICE_ERR_UNSUPPORT_R);
 		refuse(addr, data, length);
+		if (error(DEVICE_ERR_COND))
+			return -1;
+	}
+
+	// Condition 1: read the device is permitted.
+	if (character.read == DEV_CHAR_DISABLE) // read operation is not permitted.	
+	{
+		refuse(addr, data, length);
+		if (error(DEVICE_ERR_UNSUPPORT_R))
+			return -1;
 	}
 
 	// Condition 2: Device is locked
-	if (m_state.bits.lock != 0)
+	if (lock.read != DEV_CHAR_LOCKED)
 	{
-		error(DEVICE_ERR_LOCKED);
 		refuse(addr, data, length);
+		if (error(DEVICE_ERR_LOCKED))
+			return -1;	
 	}
 
 	// Condition 3: Device is not yet ready
 	if (m_state.bits.state_machine != DEVICE_STATE_READY)
 	{
-		warning(DEVICE_ERR_NOT_READY);
 		refuse(addr, data, length);
+		if (error(DEVICE_ERR_NOT_READY))
+			return  -1;		
 	}
 
-	// Condition 4: Check if memory is useful
-	if (data == NULL)
-	{
-		error(DEVICE_ERR_MEMORY_UNAVAILABLE);
-		refuse(addr, data, length);
-	}
+	//// Condition 4: Check if memory is useful
+	//if (data == NULL)
+	//{
+	//	error(DEVICE_ERR_MEMORY_UNAVAILABLE);
+	//	refuse(addr, data, length);
+	//}
+
+	// boundary case
+	if (length == 0)
+		return 0;
+
 
 	return read_ex(addr, data, length);
 }
 
-gmp_ptrdiff_t io_device_base::write(_IN gmp_ptraddr_t addr, _IN gmp_data_t* data, gmp_size_t length)
+gmp_ptrdiff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_size_t length)
 {
+	gmp_assert(data != nullptr);
+
+	// boundary case
+	// NOTE: is this safe
+	if (length == 0)
+		return 0;
+
 	// judge if the condition is meet
 
 	// Condition 1: write the device is permitted.
@@ -77,7 +200,7 @@ gmp_ptrdiff_t io_device_base::write(_IN gmp_ptraddr_t addr, _IN gmp_data_t* data
 
 }
 
-void io_device_base::refuse(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+void io_device_base::refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
 	// print function 
 	if (m_state.bits.verbose >= DEVICE_STATE_VERBOSE_2)
@@ -86,7 +209,7 @@ void io_device_base::refuse(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_s
 	}
 }
 
-gmp_ptrdiff_t io_device_base::command(uint32_t cmd)
+gmp_diff_t io_device_base::command(uint32_t cmd)
 {
 	// More emergency, more ahead
 	switch (cmd)
@@ -119,7 +242,7 @@ gmp_ptrdiff_t io_device_base::command(uint32_t cmd)
 	case DEVICE_CMD_NULL:
 		// The last command named NULL command.
 		// This command is used to test command reaction.
-		if(m_state.bits.state_machine >= DEVICE_STATE_VERBOSE_2)
+		if (m_state.bits.state_machine >= DEVICE_STATE_VERBOSE_2)
 			gmp_print(_TEXT("[INFO] Device Command Null react!\r\n"));
 		break;
 	default:
@@ -130,7 +253,7 @@ gmp_ptrdiff_t io_device_base::command(uint32_t cmd)
 	return GMP_STATUS_OK;
 }
 
-gmp_ptrdiff_t io_device_base::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t io_device_base::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	switch (cmd)
 	{
@@ -164,14 +287,14 @@ gmp_ptrdiff_t io_device_base::command(uint32_t cmd, gmp_param_t wparam, gmp_ptra
 	return GMP_STATUS_OK;
 }
 
-gmp_ptrdiff_t io_device_base::read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+gmp_ptrdiff_t io_device_base::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
 	memcpy((void*)addr, (void*)data, length);
 
 	return length;
 }
 
-gmp_ptrdiff_t io_device_base::write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+gmp_ptrdiff_t io_device_base::write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
 	memcpy((void*)data, (void*)addr, length);
 
@@ -225,7 +348,7 @@ void io_device_base::shutdown()
 
 // SPI device
 
-gmp_ptrdiff_t spi_device::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t spi_device::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 
 	return io_device_base::command(cmd, wparam, lparam);
@@ -242,7 +365,7 @@ gmp_ptrdiff_t uart_device::command(uint32_t cmd)
 	return io_device_base::command(cmd);
 }
 
-gmp_ptrdiff_t uart_device::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t uart_device::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	return io_device_base::command(cmd, wparam, lparam);
 }
@@ -252,7 +375,7 @@ gmp_ptrdiff_t i2c_device::command(uint32_t cmd)
 	return io_device_base::command(cmd);
 }
 
-gmp_ptrdiff_t i2c_device::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t i2c_device::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	return io_device_base::command(cmd, wparam, lparam);
 }

@@ -20,7 +20,7 @@ gmp_ptrdiff_t bh1750::command(uint32_t cmd)
 	return cmd;
 }
 
-gmp_ptrdiff_t bh1750::command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam)
+gmp_ptrdiff_t bh1750::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	return GMP_STATUS_OK;
 }

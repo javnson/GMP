@@ -48,7 +48,7 @@ public:
 
 public:
 	virtual gmp_ptrdiff_t command(uint32_t cmd);
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 public:
 	dev_record_t temp_rec;

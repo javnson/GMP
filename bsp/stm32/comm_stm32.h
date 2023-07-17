@@ -3,10 +3,10 @@
 #include <comm/comm_basic.h>
 
 // STM32 platform
-#include "stm32l1xx_hal.h"
+#include "bsp/hardware_relative_headers.h"
 
 // Usage
-// 1. call attach function to link pheripheral handle with dba 
+// 1. call attach function to link peripheral handle with DBA (device base address)
 
 
 class spi_device_stm32
@@ -36,7 +36,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_ptrdiff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -47,7 +47,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_ptrdiff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief This function could pass a command.
@@ -55,6 +55,8 @@ public:
 	 * @return if the command is done corrected.
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230606
+	 * @note about command
+	 * 
 	 */
 	virtual gmp_ptrdiff_t command(uint32_t cmd);
 
@@ -67,42 +69,44 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 public:
-	// pheripheral fucntion
+	// peripheral function
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
+	 *        If you is using initialize code generation, for example CUBEMX, you should using macro GMP_INIT_DEPOSIT.
 	 *		  This function would only change the state machine without any substantive operations.
 	 * @return if the command can't run correctly, the program would abort.
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230704
 	 */
-	virtual void init();
+//	virtual void init();
 
 	/**
 	 * @brief This function reset the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.	 *		  This function would only change the state machine without any substantive operations.
+	 *        If you is using initialize code generation, for example CUBEMX, you should using macro GMP_INIT_DEPOSIT.	 
+	 *		  This function would only change the state machine without any substantive operations.
 	 * @return if the command can't run correctly, the program would abort.
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230704
 	 */
-	virtual void reset();
+//	virtual void reset();
 
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.	 * @return if the command can't run correctly, the program would abort.
+	 *        If you is using initialize code generation, for example CUBEMX, you should using macro GMP_INIT_DEPOSIT.	 
+	 * @return if the command can't run correctly, the program would abort.
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230704
 	 */
-	virtual void shutdown();
+//	virtual void shutdown();
 
-	// regisier a spi device
+	// register a SPI device
 	// @brief bind a SPI channel with SPI handle
 	// @param spi_channel, a pointer to SPI peripheral base address, such as SPI6
 	// @param spi_handle, STM32 manage SPI device as a handle form so the class will
-	//           store spi handle meantime.
+	//           store SPI handle meantime.
 	void reg_device(SPI_TypeDef* spi_channel, SPI_HandleTypeDef* spi_handle);
 
 public:
@@ -139,7 +143,7 @@ public:
 	 *			 Gqc
 	 * @date   : 20230715
 	 */
-	virtual gmp_ptrdiff_t read_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -153,7 +157,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230605
 	 */
-	virtual gmp_ptrdiff_t write_ex(_IN gmp_ptraddr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief This function could pass a command.
@@ -162,7 +166,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
+	virtual gmp_diff_t command(uint32_t cmd);
 
 	/**
 	 * @brief This function could pass a command.
@@ -173,10 +177,10 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230606
 	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	virtual gmp_diff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 public:
-	// pheripheral fucntion
+	// peripheral function
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
 	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
@@ -204,7 +208,7 @@ public:
 	 */
 //	virtual void shutdown();
 
-	// regisier a spi device
+	// register a SPI device
 	// @brief bind a SPI channel with SPI handle
 	// @param spi_channel, a pointer to SPI peripheral base address, such as SPI6
 	// @param spi_handle, STM32 manage SPI device as a handle form so the class will
