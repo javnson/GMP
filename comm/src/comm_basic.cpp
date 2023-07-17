@@ -33,7 +33,7 @@ void cmd_device::clear_error_cnt()
 {
 	m_error_cnt = 0;
 	m_warn_cnt = 0;
-	warn_free = 0;
+	warn_cond = 0;
 }
 
 void cmd_device::set_verbose(uint8_t verbose)
@@ -43,66 +43,116 @@ void cmd_device::set_verbose(uint8_t verbose)
 
 void cmd_device::error(uint32_t errcode)
 {
-	// If this is a fatal error
-	if (errcode & DEVICE_ERRO_BEGIN != 0)
+	// NOTE return 1 to stop the process
+	//      return 0 to ignore the process
+	
+	// global information counter
+	g_info_cnt += 1;
+
+	// Part 1 Some special code
+		
+	// Some fatal error has happened, so user should figure them out first.
+	if (errcode == DEVICE_ERR_COND)
 	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_ERROR)
+			gmp_print("[erro.%d]\t device still in ERROR condition.\r\n",
+				g_info_cnt);
+
+		m_warn_cnt += 1;
+		return 1;
+	}
+
+	// Part 2 General error
+	if(errcde >= DEVICE_ERRO_BEGIN) // error
+	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_ERROR)
+			gmp_print("[erro.%d]\t general ERROR happened, error code: %d.\r\n",
+				g_info_cnt ,errcode);
+
 		m_error_cnt += 1;
 		m_last_error = errcode;
 		return 1;
 	}
-	// if this is a warning
-	else
+	else if (errcode >= DEVICE_WARN_BEGIN) // warning
 	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_WARNING)
+			gmp_print("[warn.%d]\t general WARNING happened, warning code: %d.\r\n", 
+				g_info_cnt, errcode);
+		
 		m_warn_cnt += 1;
 		m_last_error = errcode;
 		return 0;
 	}
+	else //info
+	{
+		if (get_verbose() >= DEVICE_STATE_VERBOSE_INFO)
+			gmp_print("[info.%d]\t general INFO happened, info code: %d.\r\n",
+				g_info_cnt, errcode);
+
+		return 0;
+	}
+
+
 }
 
 void cmd_device::error_release()
 {
-	error_free = 0;
+	erro_cond = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // io_device_base
 gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
+	gmp_assert(m_dba != nullptr);
 	gmp_assert(data != nullptr);
 
-	// boundary case
-	if (length == 0)
-		return 0;
 
 	// judge if the condition is meet
 
-	// Condition 1: read the device is permitted.
-	if ((m_state.bits.characters & DEVICE_STATE_CHAR_R) == 0) // read oper is not permitted.	
+	// Condition 0: If any fatal error haven't been clear
+	if (erro_cond)
 	{
-		error(DEVICE_ERR_UNSUPPORT_R);
 		refuse(addr, data, length);
+		if (error(DEVICE_ERR_COND))
+			return -1;
+	}
+
+	// Condition 1: read the device is permitted.
+	if (character.read == DEV_CHAR_DISABLE) // read operation is not permitted.	
+	{
+		refuse(addr, data, length);
+		if (error(DEVICE_ERR_UNSUPPORT_R))
+			return -1;
 	}
 
 	// Condition 2: Device is locked
-	if (m_state.bits.lock != 0)
+	if (lock.read != DEV_CHAR_LOCKED)
 	{
-		error(DEVICE_ERR_LOCKED);
 		refuse(addr, data, length);
+		if (error(DEVICE_ERR_LOCKED))
+			return -1;	
 	}
 
 	// Condition 3: Device is not yet ready
 	if (m_state.bits.state_machine != DEVICE_STATE_READY)
 	{
-		warning(DEVICE_ERR_NOT_READY);
 		refuse(addr, data, length);
+		if (error(DEVICE_ERR_NOT_READY))
+			return  -1;		
 	}
 
-	// Condition 4: Check if memory is useful
-	if (data == NULL)
-	{
-		error(DEVICE_ERR_MEMORY_UNAVAILABLE);
-		refuse(addr, data, length);
-	}
+	//// Condition 4: Check if memory is useful
+	//if (data == NULL)
+	//{
+	//	error(DEVICE_ERR_MEMORY_UNAVAILABLE);
+	//	refuse(addr, data, length);
+	//}
+
+	// boundary case
+	if (length == 0)
+		return 0;
+
 
 	return read_ex(addr, data, length);
 }
@@ -192,7 +242,7 @@ gmp_diff_t io_device_base::command(uint32_t cmd)
 	case DEVICE_CMD_NULL:
 		// The last command named NULL command.
 		// This command is used to test command reaction.
-		if(m_state.bits.state_machine >= DEVICE_STATE_VERBOSE_2)
+		if (m_state.bits.state_machine >= DEVICE_STATE_VERBOSE_2)
 			gmp_print(_TEXT("[INFO] Device Command Null react!\r\n"));
 		break;
 	default:

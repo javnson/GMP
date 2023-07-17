@@ -3,8 +3,11 @@
 #include <base\gmp_base.h>
 
 
+uint32_t g_info_cnt = 0;
+
 void gmp_startup(void)
 {
+	gmp_print("[INFO.%d]\t GMP print test done!\r\n");
 
 }
 

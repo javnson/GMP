@@ -10,10 +10,10 @@
 
 // communication classes Universally Unique IDentifiers
 //#define UUID_IO_DEVICE_BASE { 0xb18a,0xbc1c,0xf9aa,0x4634,0x944a,0x39b7,0xdcef,0xe829 }
-#define UUID_IO_DEVICE_UART { 0xb663,0x087d,0x5661,0x475c,0xb85e,0x939e,0xa806,0x0c99 }
-#define UUID_IO_DEVICE_IIC  { 0x966d,0xd336,0x2e52,0x4d4e,0xa4e8,0x7f14,0x6db9,0x23c4 }
-#define UUID_IO_DEVICE_SPI  { 0xc584,0x2a4b,0xe89b,0x428d,0x8465,0xa668,0xd85e,0x596a }
-#define UUID_IO_DEVICE_DAC  { 0xb18a,0xbc1c,0xf9aa,0x4634,0x944a,0x39b7,0xdcef,0xe829 }
+//#define UUID_IO_DEVICE_UART { 0xb663,0x087d,0x5661,0x475c,0xb85e,0x939e,0xa806,0x0c99 }
+//#define UUID_IO_DEVICE_IIC  { 0x966d,0xd336,0x2e52,0x4d4e,0xa4e8,0x7f14,0x6db9,0x23c4 }
+//#define UUID_IO_DEVICE_SPI  { 0xc584,0x2a4b,0xe89b,0x428d,0x8465,0xa668,0xd85e,0x596a }
+//#define UUID_IO_DEVICE_DAC  { 0xb18a,0xbc1c,0xf9aa,0x4634,0x944a,0x39b7,0xdcef,0xe829 }
 
 // Device State definition
 #pragma region DEVICE_STATE_DEF
@@ -49,20 +49,11 @@ typedef union _tag_device_state
 #define DEVICE_STATE_SHUTDOWN       (0x00) // Power-Off
 #define DEVICE_STATE_CONFIG         (0x01) // Preparing & config
 #define DEVICE_STATE_READY          (0x02) // ready to be busy
-#define DEVICE_STATE_BUZY           (0X03) // running receiving or transmitting
+#define DEVICE_STATE_BUSY           (0X03) // running receiving or transmitting
+#define DEVICE_STATE_LOWPOWER       (0x04) // low-power mode, waiting to be weak up, and then ready
 //#define DEVICE_STATE_ERROR          (0x03) // meet a fatal error, need to be re initialization
 //#define DEVICE_STATE_RUNTIME_ERROR  (0x04) // meet a runtime error, should reset error reg, and then ready again
-#define DEVICE_STATE_LOWPOWER       (0x04) // low-power mode, waiting to be weak up, and then ready
 
-
-// gmp_device_state_t::bits::characters provides 4 inner characters.
-#define DEVICE_STATE_CHAR_NULL      (0x00)
-#define DEVICE_STATE_CHAR_W         (0x01)
-#define DEVICE_STATE_CHAR_R         (0x02)
-#define DEVICE_STATE_CHAR_C         (0x04)
-#define DEVICE_STATE_CHAR_I         (0x08) // init, reset, halt
-#define DEVICE_STATE_CHAR_PNP       (0X10) // 
-//#define DEVICE_STATE_CHAR_R         (0x08)
 
 // gmp_device_state_t::bits::roles
 #define DEVICE_STATE_ROLE_NULL		(0x00)
@@ -71,20 +62,7 @@ typedef union _tag_device_state
 #define DEVICE_STATE_ROLE_MGR		(0x03)
 #define DEVICE_STATE_ROLE_SPECIAL   (0x04)
 
-// gmp_device_state_t::bits::lock
-#define DEVICE_STATE_LOCK_DISABLE   (0x00)
-#define DEVICE_STATE_LOCK           (0x01)
-#define DEVICE_STATE_UNLOCK         (0x02)
 
-// gmp_device_state_t::bits::warning
-#define DEVICE_STATE_WARNING        (0x01)
-#define DEVICE_STATE_NORMAL         (0x00)
-
-// gmp_device_state_t::bits::verbose
-#define DEVICE_STATE_VERBOSE_NULL   (0x00)
-#define DEVICE_STATE_VERBOSE_1      (0x01) // less print
-#define DEVICE_STATE_VERBOSE_2      (0x02)
-#define DEVICE_STATE_VERBOSE_3      (0x03) // more print
 
 // gmp_device_state_t::bits::pnp
 #define DEVICE_STATE_PNP_DISBALE    (0x00) // PNP method is disable
@@ -94,6 +72,52 @@ typedef union _tag_device_state
 
 // gmp_device_state_t::bits::rpc
 #define DEVICE_STATE_RPC_DISABLE    (0x00) // disable RPC
+
+
+
+// gmp_device_state_t::bits::characters provides 4 inner characters.
+#define DEVICE_STATE_CHAR_NULL      (0x00)
+#define DEVICE_STATE_CHAR_W         (0x01) // write
+#define DEVICE_STATE_CHAR_R         (0x02) // read
+#define DEVICE_STATE_CHAR_C         (0x04) // config
+#define DEVICE_STATE_CHAR_P         (0x08) // power mgr: init, reset, halt
+#define DEVICE_STATE_CHAR_PNP       (0X10) // 
+//#define DEVICE_STATE_CHAR_R         (0x08)
+
+// gmp_device_state_t::bits::lock
+#define DEVICE_STATE_LOCK_DISABLE   (0x00)
+#define DEVICE_STATE_LOCK           (0x01)
+#define DEVICE_STATE_UNLOCK         (0x02)
+
+typedef struct _tag_dev_char_t
+{
+	uint32_t write : 1;
+	uint32_t read : 1;
+	uint32_t config : 1;
+	uint32_t power : 1;
+	uint32_t pnp : 1;
+}dev_char_t;
+
+#define DEV_CHAR_LOCKED				(1)
+#define DEV_CHAR_UNLOCKED			(0)
+
+#define DEV_CHAR_PERMIT             (1)
+#define DEV_CHAR_DISABLE            (0)
+
+// gmp_device_state_t::bits::warning
+#define DEVICE_STATE_WARNING         (0x01)
+#define DEVICE_STATE_NORMAL          (0x00)
+
+// gmp_device_state_t::bits::verbose
+#define DEVICE_STATE_VERBOSE_NULL    (0x00) // No print
+#define DEVICE_STATE_VERBOSE_1       (0x01) // less print, mainly error
+#define DEVICE_STATE_VERBOSE_ERROR   (0x01)
+#define DEVICE_STATE_VERBOSE_2       (0x02) // more print, mainly warning
+#define DEVICE_STATE_VERBOSE_WARNING (0x02)
+#define DEVICE_STATE_VERBOSE_3       (0x03) // mostly print, mainly info
+#define DEVICE_STATE_VERBOSE_INFO    (0x04)
+
+
 
 #pragma endregion DEVICE_STATE_DEF
 
@@ -144,8 +168,8 @@ typedef uint32_t gmp_device_cmd;
 #pragma region ErrorCode
 // io_device_base error code definition
 #define DEIVCE_OK                     (0x0000)
-
-#define DEVICE_WARN_BEGIN          (0x00000001)
+#define DEVICE_INFO_BEGIN          (0x00000000)
+#define DEVICE_WARN_BEGIN          (0xC0000000)
 #define DEVICE_ERRO_BEGIN          (0X80000000)
 
 // unsupported operation happened
@@ -163,6 +187,8 @@ typedef uint32_t gmp_device_cmd;
 #define DEVICE_RECOVER_FROM_ERROR     (DEVICE_WARN_BEGIN + 0x001A)
 #define DEVICE_ERR_TIMEOUT			  (DEVICE_WARN_BEGIN + 0x001B)
 
+// @brief device still in error condition. User should free from the error condition.
+#define DEVICE_ERR_COND               (DEVICE_ERRO_BEGIN + 0x00FD)
 #define DEVICE_ERR_ASSERT             (DEVICE_ERRO_BEGIN + 0x00FE)
 #define DEVICE_ERR_HAL				  (DEVICE_WARN_BEGIN + 0x00FF)
 
@@ -195,8 +221,8 @@ public:
 		m_last_error = DEIVCE_OK;
 		m_error_cnt = 0;
 		m_warn_cnt = 0;
-		error_free = 0;
-		warn_free = 0;
+		erro_cond = 0;
+		warn_cond = 0;
 		verbose = DEVICE_STATE_VERBOSE_1;
 	}
 	~cmd_device()
@@ -222,10 +248,10 @@ public:
 protected:
 	// 0 no error happen, the device is running normally.
 	// 1 error happened, you should recover from error first.
-	uint8_t error_free : 1;
+	uint8_t erro_cond : 1;
 	
 	// 0 no warning happen, 1 warning is triggered and you may choose to ignore.
-	uint8_t warn_free : 1;
+	uint8_t warn_cond : 1;
 
 	// Set the verbose level of the device.
 	// the higher value, the more verbose.
@@ -270,7 +296,7 @@ public:
 
 	/**
 	 * @brief This function set error counter to 0.
-	 *        Meanwhile this function set warn_free to 0.
+	 *        Meanwhile this function set warn_cond to 0.
 	 * @param null.
 	 * @return null.
 	 * @author : Javnson
@@ -332,45 +358,59 @@ class io_device_base
 	:public cmd_device
 {
 protected:
-	void* m_dba; // device base address
+	// protected members
+	// @brief device base address
+	void* m_dba;
+
+	// @brief device state machine
 	gmp_device_state_t m_state;
 
+	// @brief This variable describe the character of the device.
+	// 0 is not permit, 1 is permit
+	dev_char_t character;
 
-	uint16_t character;
-	uint16_t lock;
+	// @brief This variable describe the lock of the characters.
+	// 0 is not lock, 1 is locked.
+	dev_char_t lock;
 
 public:
 	// ctor & dtor
 	io_device_base()
+		:m_dba(nullptr), character(nullptr), lock(lock)
 	{
-		m_dba = NULL;
-		m_state.all = 0;
+//		m_dba = NULL;
 
-		m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
-		m_state.bits.characters = DEVICE_STATE_CHAR_NULL;
-		m_state.bits.roles = DEVICE_STATE_ROLE_NULL;
-		m_state.bits.lock = DEVICE_STATE_LOCK_DISABLE;
-		m_state.bits.warning = DEVICE_STATE_NORMAL;
-		m_state.bits.verbose = DEVICE_STATE_VERBOSE_1;
-		m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
+		m_state.all = 0;
+		//m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
+		//m_state.bits.roles = DEVICE_STATE_ROLE_NULL;
+		//m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
+		//m_state.bits.rpc = DEVICE_STATE_RPC_DISABLE;
+
+//		character = DEVICE_STATE_CHAR_NULL;
+//		lock = DEVICE_STATE_CHAR_NULL;
 	}
 
 	io_device_base(void* dba)
+		:m_dba(dba), character(nullptr), lock(lock)
 	{
-		m_dba = dba;
+//		m_dba = dba;
 
 		m_state.all = 0;
-		m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
-		m_state.bits.roles = DEVICE_STATE_ROLE_NULL;
-		m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
-		m_state.bits.rpc = DEVICE_STATE_RPC_DISABLE;
+		//m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
+		//m_state.bits.roles = DEVICE_STATE_ROLE_NULL;
+		//m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
+		//m_state.bits.rpc = DEVICE_STATE_RPC_DISABLE;
 
-		character = DEVICE_STATE_CHAR_NULL;
-
+//		character = DEVICE_STATE_CHAR_NULL;
+//		lock = DEVICE_STATE_CHAR_NULL;
 
 	}
+
 	~io_device_base()
-	{}
+	{
+		// This variable is treated as a symbol of whether this module is running.
+		m_dba = nullptr;
+	}
 
 public: // Core functions
 	/**
@@ -513,11 +553,11 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	inline void error(gmp_errcode_t error_code)
-	{
-		this->last_err = error_code;
-		this->m_state.bits.state_machine = DEVICE_STATE_ERROR;
-	}
+	//inline void error(gmp_errcode_t error_code)
+	//{
+	//	this->last_err = error_code;
+	//	this->m_state.bits.state_machine = DEVICE_STATE_ERROR;
+	//}
 
 	/**
 	 * @brief When warning occurred, call the function.
@@ -526,11 +566,11 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	inline void warning(gmp_errcode_t error_code)
-	{
-		this->last_err = error_code;
-		this->m_state.bits.warning = DEVICE_STATE_WARNING;
-	}
+	//inline void warning(gmp_errcode_t error_code)
+	//{
+	//	this->last_err = error_code;
+	//	this->m_state.bits.warning = DEVICE_STATE_WARNING;
+	//}
 
 	/**
 	 * @brief When error occurred, call the function.
@@ -539,10 +579,10 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	inline void clear_warning()
-	{
-		this->m_state.bits.warning = DEVICE_STATE_NORMAL;
-	}
+	//inline void clear_warning()
+	//{
+	//	this->m_state.bits.warning = DEVICE_STATE_NORMAL;
+	//}
 
 	/**
 	 * @brief You may set verbose level by the function
@@ -551,10 +591,10 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230606
 	 */
-	inline void set_verbose_level(uint16_t verbose)
-	{
-		m_state.bits.verbose = verbose;
-	}
+	//inline void set_verbose_level(uint16_t verbose)
+	//{
+	//	m_state.bits.verbose = verbose;
+	//}
 
 	/**
 	 * @brief You may get pnp state by the function.
@@ -735,7 +775,7 @@ public:
 	 * @param data the pointer for data, which would be treated as a buffer
 	 * @param length the capacity of the buffer
 	 * @return the real length of the data buffer
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
 	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
@@ -746,7 +786,7 @@ public:
 	 * @param data the pointer for data, which would be sent
 	 * @param length the length of the data buffer
 	 * @return real length that been written
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230605
 	 */
 	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
@@ -755,7 +795,7 @@ public:
 	 * @brief This function could pass a command.
 	 * @param cmd the command.
 	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
+	 * @author : Javnson
 	 * @date   : 20230606
 	 */
 	virtual gmp_diff_t command(uint32_t cmd);

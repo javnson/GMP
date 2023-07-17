@@ -203,7 +203,7 @@ extern "C"
     // @param Debug formatted string print function
     // @param s     : the formatted string to be printed
     // @param ...   : the explicit content of formatted variables.
-    gmp_status_t gmp_print(_IN const gmp_data_t* content, ...);
+    gmp_stat_t gmp_print(_IN const char* content, ...);
 
     // @brief This function will be called when GMP meets a fatal error
     // generally this function would contain a endless loop.
@@ -225,8 +225,8 @@ extern "C"
     // @param msg : The note to be show.
     // @param filepath : The file path to be showed
     // @param line : The assert line position.
-    uint16_t gmp_assert_print(_IN const gmp_data_t* msg,
-        _IN const gmp_data_t* filepath, _IN gmp_size_t line);
+    uint16_t gmp_assert_print(_IN const char* msg,
+        _IN const char* filepath, _IN gmp_size_t line);
 
     // This macro function provide a easy-using assert for GMP library.
     // This macro would be called when assert is triggered.
@@ -246,7 +246,7 @@ extern "C"
     // Originally, this variable point to gmp_dbg_write_default function.
     // User may change this function if necessary.
     // Attention: this function should defined by C call protocol.
-    extern void (*dbg_write)(_IN const gmp_data_t*, _IN gmp_size_t);
+    extern void (*dbg_write)(_IN const char*, _IN gmp_size_t);
 
     // There are several functions user should call them manually.
 
@@ -254,7 +254,8 @@ extern "C"
     //        And user should call this function in init process.
     void gmp_startup(void);
 
-
+    // This variable is used to be a counter of all the infos, warnings and errors.
+    extern uint32_t g_info_cnt;
 
 #ifdef __cplusplus
 }
