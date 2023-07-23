@@ -6,3 +6,20 @@
 #endif
 
 
+// STM32 series devices
+#ifdef _GMP_STM32
+#ifdef _GMP_STM32L1
+#include "stm32l1xx_hal.h"
+#elif _GMP_STM32H7
+#endif
+#endif // end of _GMP_STM32 device series
+
+// TMS320 series devices
+#ifdef _GMP_C2000
+#ifdef _GMP_28x
+#include <DSP28x_Project.h>
+#elif _GMP_280x
+
+#endif 
+
+#endif // end of _GMP_C2000 Device series
