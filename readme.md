@@ -27,4 +27,7 @@ First of all, you should pay attention to the bsp folder.
 | ---------- | ----- | ----------------------------------------------- |
 | 2023.07.16 |       | Create the Library                              |
 | 2023.07.17 |       | Rebuild the library. Change some classes' name. |
+| 2023.07.23 |       | Add application framework                       |
+
+
 

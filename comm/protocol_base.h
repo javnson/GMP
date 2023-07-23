@@ -17,12 +17,14 @@ public:
 	~protocol_base()
 	{}
 
-	// implement a set of cmd 
-	// startup
-	// get result-CMD
-	// accuracy
-	// duration
 
+public:
+	// kernel virtual function
+	// This class will implement the R/W functions.
+	RESPONSE_RW
+
+	// This class will implement the cmd function.
+	RESPONSE_CMD
 
 public:
 	io_device_base* filter; // I2C bus, RS485 BUS

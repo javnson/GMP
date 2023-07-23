@@ -1002,6 +1002,7 @@ public:
 // NOTE: This class hasn't been implement correctly.
 #pragma region GPIO_DEVICE_DEF
 
+// @brief This class implement a suspended GPIO handle. User may use this handle easily.
 class gpio_port
 {
 public:
@@ -1080,6 +1081,8 @@ public:
 
 };
 
+// @brief This class abstract the whole GPIO to a device.
+// This device may exist only one instance. The GMP library use this class to implement PRC of GPIO.
 class gpio_dev
 	: public cmd_device
 {
@@ -1139,8 +1142,6 @@ public:
 	RESPONSE_CMD
 
 };
-
-// GPIO global function
 
 
 
