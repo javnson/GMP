@@ -1,27 +1,38 @@
 #include "bh1750.h"
 
-gmp_ptrdiff_t bh1750::command(uint32_t cmd)
+gmp_stat_t bh1750::cmd(uint32_t cmd)
 {
+	uint8_t opecode;
 	switch (cmd)
 	{
 	case PHY_CMD_SHUTDOWN:
-		m_dev->write(addr, BH1750_CMD_POWER_DOWN, 1);
+		opecode = BH1750_CMD_POWER_DOWN;
+		//m_dev->write(addr, BH1750_CMD_POWER_DOWN, 1);
 		break;
 
 	case PHY_CMD_RESET:
-		m_dev->write(addr, BH1750_CMD_RESET, 1);
+		opecode = BH1750_CMD_RESET;
+		//m_dev->write(addr, BH1750_CMD_RESET, 1);
 		break;
 
 	case PHY_CMD_INIT:
-		m_dev->write(addr, BH1750_CMD_POWER_ON, 1);
+		opecode = BH1750_CMD_POWER_ON;
+		//m_dev->write(addr, BH1750_CMD_POWER_ON, 1);
+		break;
+
+	default:
+		cmd_device::error(DEVICE_ERR_BAD_CMD);
+		return GMP_STAT_GENERAL_WARN;
 		break;
 	}
+	m_dev->write(addr, &opecode, 1);
 
-	return cmd;
+	return record_dev::cmd(cmd);
 }
 
-gmp_ptrdiff_t bh1750::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
+
+gmp_stat_t bh1750::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
-	return GMP_STATUS_OK;
+	return GMP_STAT_OK;
 }
 

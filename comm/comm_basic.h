@@ -2,8 +2,8 @@
 #include <string.h>
 
 // basic objects
-#include <./basic/gmp_base.h>
-#include <./basic/uuid.h>
+#include <./base/gmp_base.h>
+#include <./base/uuid.h>
 
 #ifndef _FILE_COMM_BASIC_H_
 #define _FILE_COMM_BASIC_H_
@@ -44,7 +44,6 @@ typedef union _tag_device_state
 
 
 
-// ready <-> busy
 // gmp_device_state_t::bits::state_machine provides 4 inner states
 #define DEVICE_STATE_SHUTDOWN       (0x00) // Power-Off
 #define DEVICE_STATE_CONFIG         (0x01) // Preparing & config
@@ -63,7 +62,6 @@ typedef union _tag_device_state
 #define DEVICE_STATE_ROLE_SPECIAL   (0x04)
 
 
-
 // gmp_device_state_t::bits::pnp
 #define DEVICE_STATE_PNP_DISBALE    (0x00) // PNP method is disable
 #define DEVICE_STATE_PNP_DISCONNET  (0x01)
@@ -72,6 +70,57 @@ typedef union _tag_device_state
 
 // gmp_device_state_t::bits::rpc
 #define DEVICE_STATE_RPC_DISABLE    (0x00) // disable RPC
+
+
+
+// io_device_base::characters provides 5 inner characters.
+#define DEVICE_STATE_CHAR_NULL      (0x00)
+#define DEVICE_STATE_CHAR_W         (0x01) // write
+#define DEVICE_STATE_CHAR_R         (0x02) // read
+#define DEVICE_STATE_CHAR_C         (0x04) // config
+#define DEVICE_STATE_CHAR_P         (0x08) // power mgr: init, reset, halt
+#define DEVICE_STATE_CHAR_PNP       (0X10) // 
+
+// io_device_base::lock
+#define DEVICE_STATE_LOCK_DISABLE   (0x00)
+#define DEVICE_STATE_LOCK           (0x01)
+#define DEVICE_STATE_UNLOCK         (0x02)
+
+typedef union _tag_dev_char_t
+{
+	struct
+	{
+		uint32_t write : 1;
+		uint32_t read : 1;
+		uint32_t config : 1;
+		uint32_t power : 1;
+		uint32_t pnp : 1;
+	} bits;
+
+	uint32_t all;
+} dev_char_t;
+
+#define DEV_CHAR_LOCKED				(1)
+#define DEV_CHAR_UNLOCKED			(0)
+
+#define DEV_CHAR_PERMIT             (1)
+#define DEV_CHAR_DISABLE            (0)
+
+// gmp_device_state_t::bits::warning
+#define DEVICE_STATE_WARNING         (0x01)
+#define DEVICE_STATE_NORMAL          (0x00)
+
+// gmp_device_state_t::bits::verbose
+#define DEVICE_STATE_VERBOSE_NULL    (0x00) // No print
+#define DEVICE_STATE_VERBOSE_1       (0x01) // less print, mainly error
+#define DEVICE_STATE_VERBOSE_ERROR   (0x01)
+#define DEVICE_STATE_VERBOSE_2       (0x02) // more print, mainly warning
+#define DEVICE_STATE_VERBOSE_WARNING (0x02)
+#define DEVICE_STATE_VERBOSE_3       (0x03) // mostly print, mainly info
+#define DEVICE_STATE_VERBOSE_INFO    (0x04)
+
+
+
 
 
 
@@ -131,12 +180,15 @@ typedef uint32_t gmp_device_cmd;
 #define DEVICE_CMD_NULL		(0x00)
 #define DEVICE_CMD_RESET	(0x01)
 #define DEVICE_CMD_INIT     (0x02)
-#define DEVICE_CMD_SHUTDOWN (0x03)
-#define DEVICE_CMD_LOWPOWER (0x04)
-#define DEVICE_CMD_LOCK     (0x05)
-#define DEVICE_CMD_UNLOCK   (0x06)
-#define DEVICE_CMD_VERBOSE  (0x07) // Set verbose level
-#define DEVICE_CMD_REGISTER (0x08)
+#define DEVICE_CMD_PREINIT  (0x03)
+#define DEVICE_CMD_READY    (0x04)
+#define DEVICE_CMD_SHUTDOWN (0x05)
+#define DEVICE_CMD_LOWPOWER (0x06)
+#define DEVICE_CMD_LOCK     (0x07)
+#define DEVICE_CMD_UNLOCK   (0x08)
+#define DEVICE_CMD_VERBOSE  (0x09) // Set verbose level
+#define DEVICE_CMD_REGISTER (0x0A)
+
 
 // PNP Command
 #define DEVICE_CMD_PNP_TEST  (0x10) // Test a PnP device if it is connected to the master
@@ -164,13 +216,14 @@ typedef uint32_t gmp_device_cmd;
 
 #pragma endregion CommandDefinition
 
-// Error Code Definition
+// Error Code for device Definition
 #pragma region ErrorCode
 // io_device_base error code definition
-#define DEIVCE_OK                     (0x0000)
+#define DEVICE_OK                     (0x0000)
 #define DEVICE_INFO_BEGIN          (0x00000000)
-#define DEVICE_WARN_BEGIN          (0xC0000000)
-#define DEVICE_ERRO_BEGIN          (0X80000000)
+#define DEVICE_WARN_BEGIN          (0x80000000)
+#define DEVICE_ERRO_BEGIN          (0xC0000000)
+
 
 // unsupported operation happened
 // You may change WARN and ERRO to define if the error is fatal.
@@ -180,12 +233,15 @@ typedef uint32_t gmp_device_cmd;
 #define DEVICE_ERR_LOCKED             (DEVICE_WARN_BEGIN + 0x0013)
 #define DEVICE_ERR_NOT_READY          (DEVICE_WARN_BEGIN + 0x0014)
 #define DEVICE_ERR_MEMORY_UNAVAILABLE (DEVICE_ERRO_BEGIN + 0x0015)
-#define DEVICE_UNKNOWN_CMD   		  (DEVICE_WARN_BEGIN + 0x0016)
-#define DEVICE_UNKNOWN_CMDEX	      (DEVICE_WARN_BEGIN + 0x0017)
-#define DEIVCE_ERR_BAD_CMD			  (DEVICE_WARN_BEGIN + 0x0018)
+#define DEVICE_ERR_UNKNOWN_CMD        (DEVICE_WARN_BEGIN + 0x0016)
+#define DEVICE_ERR_UNKNOWN_CMDEX	  (DEVICE_WARN_BEGIN + 0x0017)
+#define DEVICE_ERR_BAD_CMD			  (DEVICE_WARN_BEGIN + 0x0018)
 #define DEVICE_ERR_CANNOT_INIT	      (DEVICE_ERRO_BEGIN + 0x0019)
-#define DEVICE_RECOVER_FROM_ERROR     (DEVICE_WARN_BEGIN + 0x001A)
+#define DEVICE_RECOVER_FROM_ERROR     (DEVICE_INFO_BEGIN + 0x001A)
 #define DEVICE_ERR_TIMEOUT			  (DEVICE_WARN_BEGIN + 0x001B)
+#define DEVICE_ERR_NULL_DEV_HANDLE    (DEVICE_ERRO_BEGIN + 0x001C)
+#define DEVICE_ERR_HAVE_INITED        (DEVICE_INFO_BEGIN + 0x001D)
+
 
 // @brief device still in error condition. User should free from the error condition.
 #define DEVICE_ERR_COND               (DEVICE_ERRO_BEGIN + 0x00FD)
@@ -196,11 +252,20 @@ typedef uint32_t gmp_device_cmd;
 //#define DEIVCE_IVALID_OPER			  (GMP_STATUS_FATAL_ERROR+0x01)
 #pragma endregion ErrorCode
 
-
+// This section of code provide a lot of macros for user to improve programming efficiency.
 #pragma region Tool_Macros
 #define RESPONSE_CMD     public:                  \
-		virtual gmp_stat_t command(uint32_t cmd); \
-		virtual gmp_stat_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
+		virtual gmp_stat_t cmd(uint32_t cmd); \
+		virtual gmp_stat_t cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
+
+#define RESPONSE_RW      protected:               \
+		virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length); \
+		virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+
+// Check if device still in error condition and think err_cond should resolve first.
+#define CHECK_ERROR_COND if(erro_cond && error(DEVICE_ERR_COND))
+
+	
 
 
 #pragma endregion Tool_Macros
@@ -218,9 +283,9 @@ public:
 	cmd_device()
 	{
 		m_device_usage_label = 0;
-		m_last_error = DEIVCE_OK;
-		m_error_cnt = 0;
-		m_warn_cnt = 0;
+		m_last_error = DEVICE_OK;
+//		m_error_cnt = 0;
+//		m_warn_cnt = 0;
 		erro_cond = 0;
 		warn_cond = 0;
 		verbose = DEVICE_STATE_VERBOSE_1;
@@ -240,10 +305,12 @@ public:
 	uint32_t m_last_error;
 
 	// the counter of error
-	gmp_fast_t m_error_cnt;
+	// update: replace with global variables `g_warn_cnt`
+//	gmp_fast_t m_error_cnt;
 
 	// the counter of warning
-	gmp_fast_t m_warn_cnt;
+	// update: replace with global variables `g_warn_cnt`
+//	gmp_fast_t m_warn_cnt;
 
 protected:
 	// 0 no error happen, the device is running normally.
@@ -292,7 +359,10 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230716
 	 */
-	uint32_t get_device_usage_label();
+	uint32_t get_device_usage_label()
+	{
+		return m_device_usage_label;
+	}
 
 	/**
 	 * @brief This function set error counter to 0.
@@ -302,7 +372,9 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230716
 	 */
-	void clear_error_cnt();
+
+//	void clear_error_cnt();
+
 
 	/**
 	 * @brief You may set verbose level by the function
@@ -317,10 +389,11 @@ public:
 	 * @brief You may get verbose level by the function
 	 * @param null
 	 * @return null
-	 * @author : Javnson
-	 * @date   : 20230606
+	 * @author : Javnson, Gqc
+	 * @date   : 20230719
+	 * @edition: [Gqc] return value type: void --> uint8_t
 	 */
-	inline void get_verbose()
+	inline uint8_t get_verbose()
 	{
 		return this->verbose;
 	}
@@ -344,7 +417,22 @@ protected:
 	 * @author : Javnson
 	 * @date   : 20230716
 	 */
-	void error_release();
+	void clear_erro();
+	
+public:
+	/**
+	 * @brief This function may release the warning state.
+	 * @param null.
+	 * @return null
+	 * @note User have no necessary to call this function. 
+	 * @author : Javnson
+	 * @date   : 20230716
+	 */
+	void clear_warn()
+	{
+		warn_cond = 0;
+	}
+
 
 };
 
@@ -352,7 +440,7 @@ protected:
 #pragma endregion CMD_DEVICE
 
 
-// Main class definition
+// Io device base, memory space
 #pragma region DeviceBase
 class io_device_base
 	:public cmd_device
@@ -360,7 +448,7 @@ class io_device_base
 protected:
 	// protected members
 	// @brief device base address
-	void* m_dba;
+	void* m_dev;
 
 	// @brief device state machine
 	gmp_device_state_t m_state;
@@ -376,9 +464,9 @@ protected:
 public:
 	// ctor & dtor
 	io_device_base()
-		:m_dba(nullptr), character(nullptr), lock(lock)
+		:m_dev(nullptr)
 	{
-//		m_dba = NULL;
+//		m_dev = NULL;
 
 		m_state.all = 0;
 		//m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
@@ -386,14 +474,16 @@ public:
 		//m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
 		//m_state.bits.rpc = DEVICE_STATE_RPC_DISABLE;
 
+		character.all = DEVICE_STATE_CHAR_W | DEVICE_STATE_CHAR_R;
 //		character = DEVICE_STATE_CHAR_NULL;
-//		lock = DEVICE_STATE_CHAR_NULL;
+
+		lock.all = DEVICE_STATE_CHAR_NULL;
 	}
 
-	io_device_base(void* dba)
-		:m_dba(dba), character(nullptr), lock(lock)
+	io_device_base(void* dev_addr)
+		:m_dev(dev_addr)
 	{
-//		m_dba = dba;
+//		m_dev = dba;
 
 		m_state.all = 0;
 		//m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
@@ -401,15 +491,16 @@ public:
 		//m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
 		//m_state.bits.rpc = DEVICE_STATE_RPC_DISABLE;
 
-//		character = DEVICE_STATE_CHAR_NULL;
-//		lock = DEVICE_STATE_CHAR_NULL;
+		character.all = DEVICE_STATE_CHAR_NULL;
+		lock.all = DEVICE_STATE_CHAR_NULL;
 
 	}
 
 	~io_device_base()
 	{
 		// This variable is treated as a symbol of whether this module is running.
-		m_dba = nullptr;
+		m_dev = nullptr;
+
 	}
 
 public: // Core functions
@@ -456,8 +547,13 @@ public: // Core functions
 	  */
 	  //gmp_diff_t write(_OUT gmp_data_t* data, gmp_size_t length);
 
+
 	// This class will implement the cmd function.
 	RESPONSE_CMD
+
+	// This class will implement the R/W functions
+//	RESPONSE_RW
+
 
 protected: // core virtual function
 	/**
@@ -482,6 +578,7 @@ protected: // core virtual function
 	 * @date   : 20230605
 	 */
 	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+
 	/**
 	 * @brief This function would be called, only if read or write are refused.
 	 *        When the device is locked, or the device don't support the method.
@@ -511,37 +608,61 @@ public:
 	 //gmp_addr_t m_pos;
 
 public:
-	// peripheral function
+
+	// peripheral function,
+	// All the following functions would be implemented in cmd function.
+
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
+	 *        If you is using initialize code generation, for example CUBEMX, you should using macro GMP_INIT_DEPOSIT.
 	 *		  This function would only change the state machine without any substantive operations.
+	 *        state machine DEVICE_STATE_SHUTDOWN -> DEVICE_STATE_READY
 	 * @return if the command can't run correctly, the program would abort.
 	 * @author : Javnson
 	 * @date   : 20230704
 	 */
-	virtual void init();
+	gmp_stat_t init();
+
+	/**
+	 * @brief Preinit function initialize the peripheral, but still waiting user to change some params.
+	 *        state machine DEVICE_STATE_SHUTDOWN -> DEVICE_STATE_CONFIG
+	 * @param null
+	 * @return if the command is done correctly.
+	 * @author : Javnson
+	 * @date   : 20230718
+	 */
+	gmp_stat_t preinit();
+
+	/**
+	 * @brief Ready function check if device fulfill the requirement, and maintaining state machine.
+	 *        state machine DEVICE_STATE_CONFIG -> DEVICE_STATE_READY
+	 * @param null
+	 * @return if the command is done correctly.
+	 * @author : Javnson
+	 * @date   : 20230718
+	 */
+	gmp_stat_t ready();
 
 	/**
 	 * @brief This function reset the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
-	 *		  This function would only change the state machine without any substantive operations.
-	 *		  This function would only change the state machine without any substantive operations.
+	 *        If you is using initialize code generation, for example CUBEMX, you should using macro GMP_INIT_DEPOSIT.
+	 *		  And under this condition, this function would only change the state machine without any substantive operations.
+	 *        State machine DEVICE_STATE_? -> DEVICE_STATE_READY
 	 * @return if the command can't run correctly, the program would abort.
 	 * @author : Javnson
 	 * @date   : 20230704
 	 */
-	virtual void reset();
+	gmp_stat_t reset();
 
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
-	 *        If you is using initialize code generation, for example CUBEMX, you shold using macro GMP_INIT_DEPOSIT.
+	 *        If you is using initialize code generation, for example CUBEMX, you should using macro GMP_INIT_DEPOSIT.
 	 * @return if the command can't run correctly, the program would abort.
 	 *		  This function would only change the state machine without any substantive operations.
 	 * @author : Javnson
 	 * @date   : 20230704
 	 */
-	virtual void shutdown();
+	gmp_stat_t shutdown();
 
 
 public:
@@ -617,7 +738,7 @@ public:
 	 */
 	inline void attach(void* device_addr)
 	{
-		m_dba = device_addr;
+		m_dev = device_addr;
 	}
 
 protected:
@@ -662,13 +783,10 @@ protected:
 };
 
 
+#pragma endregion IoDeviceBase
 
-#pragma endregion DeviceBase
-
-// Derived class for UART
+// Universal Asynchronous Receiver/Transmitter (UART)
 #pragma region UART_DEVICE_DEF
-
-
 
 class uart_device :
 	public io_device_base
@@ -677,7 +795,8 @@ public:
 	uart_device()
 	{
 		//		this->m_uuid = UUID_IO_DEVICE_UART;
-		m_state.bits.characters = DEVICE_STATE_CHAR_R + DEVICE_STATE_CHAR_W;
+		character.all = DEVICE_STATE_CHAR_R | DEVICE_STATE_CHAR_W;
+
 	}
 	/**
 	 * @brief Ctor with params, pass device address for the UART device.
@@ -688,7 +807,8 @@ public:
 	 */
 	uart_device(void* device_addr)
 	{
-		this->m_dba = device_addr;
+		character.all = DEVICE_STATE_CHAR_R | DEVICE_STATE_CHAR_W;
+		this->m_dev = device_addr;
 	}
 	~uart_device()
 	{
@@ -707,7 +827,7 @@ protected:
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+//	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -718,28 +838,16 @@ protected:
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+//	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+
+	// This class will implement the R/W functions.
+	RESPONSE_RW
+	
+	// This class will implement the cmd function.
+	RESPONSE_CMD
+
 
 public:
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @return if the command is done corrected.
-	 * @author : Javnson
-	 * @date   : 20230606
-	 */
-	virtual gmp_diff_t command(uint32_t cmd);
-
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @param wparam the word parameter
-	 * @param lparam the long ptr parameter
-	 * @return if the command is done corrected.
-	 * @author : Javnson
-	 * @date   : 20230606
-	 */
-	virtual gmp_diff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 
 protected:
@@ -749,7 +857,7 @@ protected:
 
 #pragma endregion UART_DEVICE_DEF
 
-// inter - integrated circuit(IIC) class definition
+// inter - integrated circuit(IIC)
 #pragma region IIC_DEVICE_DEF
 
 class i2c_device
@@ -760,7 +868,17 @@ public:
 	i2c_device()
 	{
 		//		m_uuid.uuid = UUID_IO_DEVICE_IIC;
+		character.all = DEVICE_STATE_CHAR_R | DEVICE_STATE_CHAR_W;
+
 	}
+	i2c_device(void* device_addr)
+	{
+		character.all = DEVICE_STATE_CHAR_R | DEVICE_STATE_CHAR_W;
+
+		m_dev = device_addr;
+
+	}
+
 	~i2c_device()
 	{
 
@@ -778,7 +896,8 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+//	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -789,27 +908,14 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+//	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @return if the command is done corrected.
-	 * @author : Javnson
-	 * @date   : 20230606
-	 */
-	virtual gmp_diff_t command(uint32_t cmd);
+	// This class will implement the R/W functions.
+	RESPONSE_RW
 
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @param wparam the word parameter
-	 * @param lparam the long ptr parameter
-	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
-	 * @date   : 20230606
-	 */
-	virtual gmp_diff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
+	// This class will implement the cmd function.
+	RESPONSE_CMD
+
 
 
 public:
@@ -838,6 +944,7 @@ public:
 
 #pragma endregion IIC_DEVICE_DEF
 
+// Serial Peripheral Interface(SPI)
 #pragma region SPI_DEVICE_DEF
 
 class spi_device
@@ -867,7 +974,8 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	//virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+
 
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
@@ -878,41 +986,48 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	//virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @return if the command is done corrected.
-	 * @author : Javnson
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
+	// This class will implement the R/W functions.
+	RESPONSE_RW
 
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @param wparam the word parameter
-	 * @param lparam the long ptr parameter
-	 * @return if the command is done corrected.
-	 * @author : Javnson
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
-
+	// This class will implement the cmd function.
+	RESPONSE_CMD
 
 };
 
 #pragma endregion SPI_DEVICE_DEF
 
+// General-Purpose Input/Output(GPIO)
+// NOTE: This class hasn't been implement correctly.
+#pragma region GPIO_DEVICE_DEF
+class gpio_port_base
+	: public cmd_device
+{
+public:
+	// ctor & dtor
+	gpio_port_base()
+	{
 
+	}
+
+public:
+	// This class will implement the cmd function.
+	RESPONSE_CMD
+
+public:
+	// kernel function
+
+};
+
+#pragma endregion GPIO_DEVICE_DEF
 
 // utility functions
 // You may disable utility functions by define GMP_DISABLE_DEVICE_UTILITY
 #ifndef GMP_DISABLE_DEVICE_UTILITY
 
 
-gmp_ptrdiff_t put_format_string(io_device_base* device, gmp_addr_t addr, const gmp_data_t* p_fmt, ...);
+gmp_diff_t put_format_string(io_device_base* device, gmp_addr_t addr, const gmp_data_t* p_fmt, ...);
 
 
 

@@ -8,7 +8,8 @@
 #include <stdint.h>
 
 // user config 
-#include <./basic/userconfig.h>
+#include <./base/userconfig.h>
+
 
 // disable warning of unrecognized #pragma
 // You may add a -diag_supress=161 to Option/C/C++/Misc Controls
@@ -107,8 +108,6 @@ typedef uint_least32_t gmp_errcode_t;
 #define gmp_errcode_s ((sizeof(uint_least32_t)))
 #endif
 
-
-
 // fast container
 #ifdef GMP_FAST_T
 typedef GMP_FAST_T gmp_fast_t;
@@ -125,7 +124,8 @@ typedef uint_least32_t gmp_param_t;
 #define gmp_param_s ((sizeof(uint_least32_t)))
 #endif
 
-#define _TEXT(X) ((const unsigned char*)(X))
+#define _TEXT(X) ((const char*)(X))
+
 
 #pragma endregion Tytpedef_GMP
 
@@ -144,6 +144,28 @@ typedef uint_fast16_t gmp_stat_t;
 #define gmp_status_s ((sizeof(uint_fast16_t)))
 #endif
 
+
+
+
+#define GMP_STAT_INFO_BEGIN        (0x00000000)
+#define GMP_STAT_WARN_BEGIN        (0x80000000)
+#define GMP_STAT_ERRO_BEGIN        (0xC0000000)
+
+
+// This area to define all infos, warnings or errors.
+#define GMP_STAT_OK				        (0x00000000)
+#define GMP_STAT_GENERAL_WARN           (GMP_STAT_WARN_BEGIN + 1)
+#define GMP_STAT_GENERAL_ERROR	        (GMP_STAT_ERRO_BEGIN + 1)
+#define GMP_STAT_WARN_PRINT             (GMP_STAT_WARN_BEGIN + 2)
+#define GMP_STAT_UNDEFINED_ACTION       (GMP_STAT_WARN_BEGIN + 3)
+#define GMP_STAT_HARD_ERROR             (GMP_STAT_ERRO_BEGIN + 4)
+
+
+// This macro helps to judge if a status code is a fatal error
+#define IS_GMP_ERROR(_x) ((_x > GMP_STAT_ERRO_BEGIN))
+
+#define IS_GMP_WARN(_x) ((_X > GMP_STAT_WARN_BEGIN))
+=======
 #define GMP_STATUS_WARN_TYPE       (0x0001)
 #define GMP_STATUS_ERRO_TYPE       (0x8001)
 
@@ -166,6 +188,7 @@ typedef uint_fast16_t gmp_stat_t;
 // This macro helps to judge if a status code is a fatal error
 #define IS_GMP_ERROR(x) ((x & 0x8000) != 0)
 
+
 #pragma endregion GMP_Status_def
 
 
@@ -184,7 +207,8 @@ extern "C"
     // @param content: the debug log to be printed.
     // @param len    : the length of the content.
     // @retval       : This function returns nothing. This function should designed as nothrow function.
-    void gmp_dbg_write_default(_IN const gmp_data_t* content, _IN gmp_size_t len);
+    void gmp_dbg_write_default(_IN const char* content, _IN gmp_size_t len);
+
 
     // @brief Get system tick number
     // @param null
@@ -254,8 +278,17 @@ extern "C"
     //        And user should call this function in init process.
     void gmp_startup(void);
 
-    // This variable is used to be a counter of all the infos, warnings and errors.
+
+    // @brief This variable is used to be a counter of all the infos, warnings and errors.
     extern uint32_t g_info_cnt;
+
+
+    // @brief This variable is used to be a counter of all warnings
+    extern uint32_t g_warn_cnt;
+
+    // @brief This variable is used to be a counter of all errors.
+    extern uint32_t g_erro_cnt;
+
 
 #ifdef __cplusplus
 }

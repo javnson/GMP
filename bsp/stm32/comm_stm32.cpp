@@ -1,10 +1,10 @@
 #include "comm_stm32.h"
-#include "stm32l1xx_hal.h"
+//#include "stm32l1xx_hal.h"
 
-gmp_ptrdiff_t spi_device_stm32::command(uint32_t cmd)
+gmp_stat_t spi_device_stm32::cmd(uint32_t cmd)
 {
 	// Get device base address
-	SPI_TypeDef* instance = (SPI_TypeDef*)m_dba;
+	SPI_TypeDef* instance = (SPI_TypeDef*)m_dev;
 	// Get device handle
 	// m_handle
 
@@ -17,25 +17,26 @@ gmp_ptrdiff_t spi_device_stm32::command(uint32_t cmd)
 		// pheripheral config 
 	case DEVICE_CMD_INIT:
 		init();
-		return GMP_STATUS_OK;
+		return GMP_STAT_OK;
 	case DEVICE_CMD_RESET:
 		reset();
-		return GMP_STATUS_OK;
+		return GMP_STAT_OK;
 	case DEVICE_CMD_SHUTDOWN:
 		shutdown();
-		return GMP_STATUS_OK;
+		return GMP_STAT_OK;
 
 	}
 
 	// Call parent class to react the command.
-	return spi_device::command(cmd);
+	return spi_device::cmd(cmd);
 
 }
 
-gmp_ptrdiff_t spi_device_stm32::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
+
+gmp_stat_t spi_device_stm32::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	// Get device base address
-	SPI_TypeDef* instance = (SPI_TypeDef*)m_dba;
+	SPI_TypeDef* instance = (SPI_TypeDef*)m_dev;
 	// Get device handle
 	// m_handle
 
@@ -50,16 +51,16 @@ gmp_ptrdiff_t spi_device_stm32::command(uint32_t cmd, gmp_param_t wparam, gmp_ad
 		// wParam: device base address
 		// lParam: device abstract handle
 		reg_device((SPI_TypeDef*)wparam, (SPI_HandleTypeDef*)lparam);
-		return GMP_STATUS_OK;
+		return GMP_STAT_OK;
 
 	}
 
-	return spi_device::command(cmd, wparam, lparam);
+	return spi_device::cmd(cmd, wparam, lparam);
 }
 
 void spi_device_stm32::reg_device(SPI_TypeDef* spi_channel, SPI_HandleTypeDef* spi_handle)
 {
-	m_dba = spi_channel;
+	m_dev = spi_channel;
 	m_handle = spi_handle;
 }
 
@@ -93,10 +94,10 @@ void spi_device_stm32::init()
 #if 0 // example code
 	// NOTE: Step 0 preparing
 	// Assert
-	gmp_assert((m_dba != NULL) || (m_handle != NULL));
+	gmp_assert((m_dev != NULL) || (m_handle != NULL));
 
 	// Get device base address
-	SPI_TypeDef* instance = (SPI_TypeDef*)m_dba;
+	SPI_TypeDef* instance = (SPI_TypeDef*)m_dev;
 	// Get device handle
 	// m_handle
 
@@ -197,8 +198,82 @@ void spi_device_stm32::shutdown()
 
 #endif // GMP_CUBEMX_INIT_DEPOSIT
 
-gmp_ptrdiff_t i2c_device_stm32::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+//gmp_diff_t i2c_device_stm32::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+//{
+//	gmp_assert(data != 0);
+//
+//	// Append R/W bit 1, reading 
+//	gmp_addr_t addr_a = ((addr << 1) + 1) & 0xFF;
+//
+//	HAL_StatusTypeDef status = HAL_I2C_Master_Receive(m_handle, addr_a, data, length, GMP_MAX_WAIT_MS);
+//
+//	if (status == HAL_OK)
+//	{
+//		return length;
+//	}
+//	else if (status == HAL_BUSY)
+//	{
+//		cmd_device::error(DEVICE_ERR_TIMEOUT);
+//		//warning(DEVICE_ERR_TIMEOUT);
+//		return 0;
+//	}
+//	else if (status == HAL_ERROR) 
+//	{
+//		cmd_device::error(DEVICE_ERR_HAL);
+//		//warning(DEVICE_ERR_HAL);
+//		return 0;
+//	}
+//	return length;
+//}
+//
+//gmp_diff_t i2c_device_stm32::write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+//{
+//	gmp_assert(data != 0);
+//
+//	// Append R/W bit 0, writing
+//	gmp_addr_t addr_a = (addr << 1) & 0xFF;
+//
+//
+//	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(m_handle, addr_a, data, length, GMP_MAX_WAIT_MS);
+//
+//	if (status == HAL_OK)
+//	{
+//		return length;
+//	}
+//	else if (status == HAL_BUSY)
+//	{
+//		cmd_device::error(DEVICE_ERR_TIMEOUT);
+//		//warning(DEVICE_ERR_TIMEOUT);
+//		return 0;
+//	}
+//	else if (status == HAL_ERROR) 
+//	{
+//		cmd_device::error(DEVICE_ERR_HAL);
+//		//warning(DEVICE_ERR_HAL);
+//		return 0;
+//	}
+//	return length;
+//}
+
+gmp_stat_t i2c_device_stm32::cmd(uint32_t cmd)
 {
+	return i2c_device::cmd(cmd);
+}
+
+gmp_stat_t i2c_device_stm32::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
+{
+	return i2c_device::cmd(cmd,wparam,lparam);
+}
+
+void i2c_device_stm32::reg_device(I2C_TypeDef* i2c_channel, I2C_HandleTypeDef* i2c_handle)
+{
+	m_dev = i2c_channel;
+	m_handle = i2c_handle;
+}
+
+gmp_diff_t i2c_device_stm32::read_ex(gmp_addr_t addr, gmp_data_t* data, gmp_size_t length)
+{
+	// implement this function 
 	gmp_assert(data != 0);
 
 	// Append R/W bit 1, reading 
@@ -212,18 +287,22 @@ gmp_ptrdiff_t i2c_device_stm32::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* da
 	}
 	else if (status == HAL_BUSY)
 	{
-		warning(DEVICE_ERR_TIMEOUT);
+		error(DEVICE_ERR_TIMEOUT);
+		//warning(DEVICE_ERR_TIMEOUT);
 		return 0;
 	}
-	else if (status == HAL_ERROR) 
+	else if (status == HAL_ERROR)
 	{
-		warning(DEVICE_ERR_HAL);
+		error(DEVICE_ERR_HAL);
+		//warning(DEVICE_ERR_HAL);
 		return 0;
 	}
 	return length;
+
 }
 
-gmp_ptrdiff_t i2c_device_stm32::write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+
+gmp_diff_t i2c_device_stm32::write_ex(gmp_addr_t addr, gmp_data_t* data, gmp_size_t length)
 {
 	gmp_assert(data != 0);
 
@@ -239,23 +318,17 @@ gmp_ptrdiff_t i2c_device_stm32::write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* d
 	}
 	else if (status == HAL_BUSY)
 	{
-		warning(DEVICE_ERR_TIMEOUT);
+		error(DEVICE_ERR_TIMEOUT);
+		//warning(DEVICE_ERR_TIMEOUT);
 		return 0;
 	}
-	else if (status == HAL_ERROR) 
+	else if (status == HAL_ERROR)
 	{
-		warning(DEVICE_ERR_HAL);
+		error(DEVICE_ERR_HAL);
+		//warning(DEVICE_ERR_HAL);
 		return 0;
 	}
 	return length;
 }
 
-gmp_ptrdiff_t i2c_device_stm32::command(uint32_t cmd)
-{
-	return i2c_device::command(cmd);
-}
 
-gmp_ptrdiff_t i2c_device_stm32::command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
-{
-	return i2c_device::command(cmd,wparam,lparam);
-}
