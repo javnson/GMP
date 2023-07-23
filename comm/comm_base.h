@@ -1001,27 +1001,149 @@ public:
 // General-Purpose Input/Output(GPIO)
 // NOTE: This class hasn't been implement correctly.
 #pragma region GPIO_DEVICE_DEF
+
 class gpio_port
-	: public cmd_device
 {
 public:
 	// ctor & dtor
+	gpio_port(gmp_addr_t gpio_group, gmp_size_t index)
+		:port_group(gpio_group), gpio_index(index)
+	{}
+
 	gpio_port()
 	{
 
 	}
 
+	~gpio_port()
+	{
+	}
+
+public:
+	// members GPIO index
+
+	// @brief The group index of the port
+	gmp_addr_t port_group;
+
+	// @brief the GPIO index of the group.
+	gmp_size_t gpio_index;
+
+
+public:
+	// kernel functions
+	/**
+	 * @brief This function set a GPIO to high level.
+	 * @return if gpio is set or clear.
+	 * @note This function will call ::set(), so user should implement the function in BSP file.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	gmp_stat_t set()
+	{
+		return gpio_dev::set(port_group, gpio_index);
+	}
+
+	/**
+	 * @brief This function set a GPIO to low level.
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	gmp_stat_t reset()
+	{
+		return gpio_dev::reset(port_group, gpio_index);
+	}
+
+	/**
+	 * @brief This function change the level of a GPIO.
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	gmp_stat_t toggle()
+	{
+		return gpio_dev::toggle(port_group, gpio_index);
+	}
+
+	/**
+	 * @brief This function read a specified GPIO port.
+	 * @return 0 the GPIO has low level, 1 the GPIO has high level,
+	 *	       -1 the read method invalid.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	int8_t read()
+	{
+		return gpio_dev::read(port_group, gpio_index);
+	}
+
+
+};
+
+class gpio_dev
+	: public cmd_device
+{
+public:
+	// ctor & dtor
+	gpio_dev()
+	{}
+
+	~gpio_dev()
+	{}
+
 public:
 	// Kernel function
-	void 
+	/**
+	 * @brief This function set a GPIO to high level.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t set(gmp_addr_t port_group, gmp_size_t gpio_index);
 
+	/**
+	 * @brief This function set a GPIO to low level.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t reset(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function change the level of a GPIO.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t toggle(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function read a specified GPIO port.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return 0 the GPIO has low level, 1 the GPIO has high level,
+	 *	       -1 the read method invalid.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static int8_t read(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+public:
 	// This class will implement the cmd function.
 	RESPONSE_CMD
 
-public:
-	// kernel function
-
 };
+
+// GPIO global function
+
+
+
 
 #pragma endregion GPIO_DEVICE_DEF
 

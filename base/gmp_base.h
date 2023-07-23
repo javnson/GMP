@@ -159,13 +159,15 @@ typedef uint_fast16_t gmp_stat_t;
 #define GMP_STAT_WARN_PRINT             (GMP_STAT_WARN_BEGIN + 2)
 #define GMP_STAT_UNDEFINED_ACTION       (GMP_STAT_WARN_BEGIN + 3)
 #define GMP_STAT_HARD_ERROR             (GMP_STAT_ERRO_BEGIN + 4)
+#define GMP_STAT_NOT_IMPL               (GMP_STAT_ERRO_BEGIN + 5)
 
 
 // This macro helps to judge if a status code is a fatal error
 #define IS_GMP_ERROR(_x) ((_x > GMP_STAT_ERRO_BEGIN))
 
 #define IS_GMP_WARN(_x) ((_X > GMP_STAT_WARN_BEGIN))
-=======
+
+
 #define GMP_STATUS_WARN_TYPE       (0x0001)
 #define GMP_STATUS_ERRO_TYPE       (0x8001)
 

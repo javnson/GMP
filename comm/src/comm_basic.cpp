@@ -4,7 +4,7 @@
 #include <string.h>
 
 // platforms
-#include <./comm/comm_basic.h>
+#include <comm/comm_basic.h>
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -485,3 +485,29 @@ gmp_diff_t i2c_device::write_ex(gmp_addr_t addr, gmp_data_t* data, gmp_size_t le
 {
 	return GMP_STAT_OK;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// GPIO device
+gmp_stat_t gpio_dev::set(gmp_addr_t port_group, gmp_size_t gpio_index)
+{
+	return gmp_gpio_set(port_group,gpio_index);
+}
+
+gmp_stat_t gpio_dev::reset(gmp_addr_t port_group, gmp_size_t gpio_index)
+{
+	return gmp_gpio_reset(port_group,gpio_index);
+}
+
+gmp_stat_t gpio_dev::toggle(gmp_addr_t port_group, gmp_size_t gpio_index)
+{
+	return gmp_gpio_toggle(port_group,gpio_index);
+}
+
+int8_t gpio_dev::read(gmp_addr_t port_group, gmp_size_t gpio_index)
+{
+	return gmp_gpio_read(port_group,gpio_index);
+}
+
+
+
+

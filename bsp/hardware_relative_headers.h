@@ -10,6 +10,7 @@
 #ifdef _GMP_STM32
 #ifdef _GMP_STM32L1
 #include "stm32l1xx_hal.h"
+#include <bsp/stm32/gpio_support.h>
 #elif _GMP_STM32H7
 #endif
 #endif // end of _GMP_STM32 device series
