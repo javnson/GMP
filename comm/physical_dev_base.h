@@ -44,17 +44,23 @@ typedef union _tag_phy_state_t
 #pragma region ErrorCode
 // This region provide error code for phy_device
 
-// unsupport operation
+// unsupported operation
 #define PHY_ERR_UNSUPPORT
 
 
 #pragma endregion ErrorCode
+
+#pragma region AS_COMMAND
 
 // Analog sensor protocol
 #define AS_CMD_CALIBRATION  	(0x1001)
 #define AS_CMD_SETUP     		(0x1002)
 #define AS_CMD_GET_SRC_DATA     (0x1003)
 #define AS_CMD_SET_ACCURACY     (0x1004)
+
+#pragma endregion AS_COMMAND
+
+
 
 // @brief User should implement a set of command of analog sensor.
 // User should derive this class and implement the virtual function `get_src_data()`
@@ -66,6 +72,15 @@ public:
 
 public:
 	//ctor & dtor
+	analog_sensor()
+	{
+
+	}
+
+	~analog_sensor()
+	{
+
+	}
 
 public:
 	// kernel virtual function
@@ -77,9 +92,15 @@ public:
 	
 	virtual uint32_t get_src_data(uint32_t record);
 
+public:
+	// kernel virtual function
+
+	// This class will implement the cmd function.
 	RESPONSE_CMD
 
+	// This class will implement the R/W functions.
 	RESPONSE_RW
+
 public:
 	
 
