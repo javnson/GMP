@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 // platform includes
-#include <./base/gmp_base.h>
+#include <base/gmp_base.h>
 
 
 __weak void gmp_dbg_write_default(_IN const char* content, _IN gmp_size_t len)
@@ -18,7 +18,9 @@ __weak void gmp_dbg_write_default(_IN const char* content, _IN gmp_size_t len)
 // implement of pointer
 void (*dbg_write)(const char* content, gmp_size_t length) = gmp_dbg_write_default;
 
+
 __weak gmp_stat_t gmp_print(_IN const char* content, ...)
+
 {
 	char str[SHOW_BUF_LEN];
 	gmp_size_t len;
@@ -33,6 +35,7 @@ __weak gmp_stat_t gmp_print(_IN const char* content, ...)
 	(*dbg_write)(str, len);
 
 	return GMP_STAT_OK;
+
 }
 
 __weak uint16_t gmp_assert_print(_IN const char* msg, _IN const char* filepath, _IN gmp_size_t line)

@@ -5,7 +5,6 @@
 #ifndef _FILE_USERCONFIG_EXAMPLE_H_
 #define _FILE_USERCONFIG_EXAMPLE_H_
 
-
 // Select DEVICE PLATFORM
 //#define _GMP_STM32
 //#define _GMP_STM32L1

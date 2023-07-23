@@ -32,6 +32,7 @@ gmp_stat_t spi_device_stm32::cmd(uint32_t cmd)
 
 }
 
+
 gmp_stat_t spi_device_stm32::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	// Get device base address
@@ -300,6 +301,7 @@ gmp_diff_t i2c_device_stm32::read_ex(gmp_addr_t addr, gmp_data_t* data, gmp_size
 
 }
 
+
 gmp_diff_t i2c_device_stm32::write_ex(gmp_addr_t addr, gmp_data_t* data, gmp_size_t length)
 {
 	gmp_assert(data != 0);
@@ -328,3 +330,5 @@ gmp_diff_t i2c_device_stm32::write_ex(gmp_addr_t addr, gmp_data_t* data, gmp_siz
 	}
 	return length;
 }
+
+

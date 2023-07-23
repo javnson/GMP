@@ -30,6 +30,7 @@ gmp_stat_t bh1750::cmd(uint32_t cmd)
 	return record_dev::cmd(cmd);
 }
 
+
 gmp_stat_t bh1750::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	return GMP_STAT_OK;

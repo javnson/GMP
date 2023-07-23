@@ -51,6 +51,7 @@ public:
 	// This class will implement the cmd function.
 	RESPONSE_CMD
 
+
 public:
 	dev_record_t temp_rec;
 		
