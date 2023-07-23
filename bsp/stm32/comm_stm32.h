@@ -9,6 +9,7 @@
 // 1. call attach function to link peripheral handle with m_dev (device base address)
 
 
+
 class spi_device_stm32
 	:public spi_device
 {
@@ -38,6 +39,7 @@ public:
 	 */
 	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
+
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
 	 * @param addr no use
@@ -52,6 +54,7 @@ public:
 	// This class will implement the cmd function.
 	RESPONSE_CMD
 
+
 public:
 	// peripheral function
 	/**
@@ -62,7 +65,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230704
 	 */
-	virtual void init();
+//	virtual void init();
 
 	/**
 	 * @brief This function reset the peripheral, maintaining state machine.
@@ -72,7 +75,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230704
 	 */
-	virtual void reset();
+//	virtual void reset();
 
 	/**
 	 * @brief Init function initialize the peripheral, maintaining state machine.
@@ -81,7 +84,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230704
 	 */
-	virtual void shutdown();
+//	virtual void shutdown();
 
 	// register a SPI device
 	// @brief bind a SPI channel with SPI handle
@@ -134,6 +137,7 @@ public: virtual gmp_stat_t cmd(uint32_t cmd); virtual gmp_stat_t cmd(uint32_t cm
 	 */
 //	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
+
 	/**
 	 * @brief write a string of message for the device. The implement of the function is blocked.
 	 * @param addr no use
@@ -148,6 +152,7 @@ public: virtual gmp_stat_t cmd(uint32_t cmd); virtual gmp_stat_t cmd(uint32_t cm
 	 */
 //	virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
+
 	/**
 	 * @brief This function could pass a command.
 	 * @param cmd the command.
@@ -157,6 +162,7 @@ public: virtual gmp_stat_t cmd(uint32_t cmd); virtual gmp_stat_t cmd(uint32_t cm
 	 */
 //		virtual gmp_stat_t cmd(uint32_t cmd);
 //	virtual gmp_stat_t cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
+
 
 public:
 	// peripheral function

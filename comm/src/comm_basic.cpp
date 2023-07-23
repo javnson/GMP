@@ -9,6 +9,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 // cmd_device
+
 #pragma region cmd_device_source
 gmp_stat_t cmd_device::cmd(uint32_t cmd)
 {
@@ -25,6 +26,7 @@ gmp_stat_t cmd_device::cmd(uint32_t cmd)
 
 	// When the function are called, the command is an absolutely unknown command.
 	return GMP_STAT_UNDEFINED_ACTION;
+
 }
 
 gmp_stat_t cmd_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
@@ -49,10 +51,12 @@ gmp_stat_t cmd_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 // 	warn_cond = 0;
 // }
 
+
 void cmd_device::set_verbose(uint8_t verbose)
 {
 	this->verbose = verbose;
 }
+
 
 gmp_fast_t cmd_device::error(uint32_t errcode)
 {
@@ -73,10 +77,12 @@ gmp_fast_t cmd_device::error(uint32_t errcode)
 
 		warn_cond = 1;
 		g_warn_cnt += 1;
+
 		return 1;
 	}
 
 	// Part 2 General error
+
 	if(errcode >= DEVICE_ERRO_BEGIN) // error
 	{
 		if (get_verbose() >= DEVICE_STATE_VERBOSE_ERROR)
@@ -85,6 +91,7 @@ gmp_fast_t cmd_device::error(uint32_t errcode)
 
 		erro_cond = 1;
 		g_erro_cnt += 1;
+
 		m_last_error = errcode;
 		return 1;
 	}
@@ -95,6 +102,7 @@ gmp_fast_t cmd_device::error(uint32_t errcode)
 				g_info_cnt, errcode);
 		
 		g_warn_cnt += 1;
+
 		m_last_error = errcode;
 		return 0;
 	}
@@ -110,6 +118,7 @@ gmp_fast_t cmd_device::error(uint32_t errcode)
 
 }
 
+
 void cmd_device::clear_erro()
 {
 	erro_cond = 0;
@@ -124,12 +133,14 @@ void cmd_device::clear_erro()
 gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
 	gmp_assert(m_dev != nullptr);
+
 	gmp_assert(data != nullptr);
 
 
 	// judge if the condition is meet
 
 	// Condition 0: If any fatal error haven't been clear
+
 	CHECK_ERROR_COND
 		return  -1;
 
@@ -142,6 +153,7 @@ gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_
 	}
 
 	// Condition 2: Device is locked
+
 	if (lock.bits.read != DEV_CHAR_LOCKED)
 	{
 		refuse(addr, data, length);
@@ -171,6 +183,7 @@ gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_
 
 	return read_ex(addr, data, length);
 }
+
 
 gmp_diff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_size_t length)
 {
@@ -231,6 +244,7 @@ void io_device_base::refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size
 //		gmp_print(_TEXT("[INFO] The default refuse function has been called."));
 //	}
 }
+
 
 gmp_stat_t io_device_base::cmd(uint32_t cmd)
 {
@@ -303,6 +317,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 	return GMP_STAT_OK;
 }
 
+
 gmp_stat_t io_device_base::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	switch (cmd)
@@ -345,6 +360,7 @@ gmp_diff_t io_device_base::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, g
 
 	return length;
 }
+
 
 gmp_diff_t io_device_base::write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
@@ -426,6 +442,7 @@ gmp_stat_t io_device_base::shutdown()
 //////////////////////////////////////////////////////////////////////////
 // SPI device
 
+
 gmp_stat_t spi_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 
@@ -452,6 +469,7 @@ gmp_stat_t i2c_device::cmd(uint32_t cmd)
 {
 	return io_device_base::cmd(cmd);
 }
+
 
 gmp_stat_t i2c_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {

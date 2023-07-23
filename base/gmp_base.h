@@ -10,6 +10,7 @@
 // user config 
 #include <./base/userconfig.h>
 
+
 // disable warning of unrecognized #pragma
 // You may add a -diag_supress=161 to Option/C/C++/Misc Controls
 
@@ -83,12 +84,12 @@ typedef uint32_t gmp_addr_t;
 
 // container of a offset of address
 // generally is a signed type
-#ifdef gmp_diff_t
-typedef gmp_diff_t gmp_diff_t;
+#ifdef GMP_PTRDIFF_T
+typedef GMP_PTRDIFF_T gmp_diff_t;
 #else
 typedef int32_t gmp_diff_t;
 #define gmp_diff_s ((4))
-#endif // gmp_diff_t
+#endif // GMP_PTRDIFF_T
 
 // container of a counter
 // generally is a unsigned type
@@ -125,6 +126,7 @@ typedef uint_least32_t gmp_param_t;
 
 #define _TEXT(X) ((const char*)(X))
 
+
 #pragma endregion Tytpedef_GMP
 
 // The definition of Status definition
@@ -141,6 +143,7 @@ typedef GMP_STATUS_T gmp_stat_t;
 typedef uint_fast16_t gmp_stat_t;
 #define gmp_status_s ((sizeof(uint_fast16_t)))
 #endif
+
 
 
 
@@ -162,6 +165,29 @@ typedef uint_fast16_t gmp_stat_t;
 #define IS_GMP_ERROR(_x) ((_x > GMP_STAT_ERRO_BEGIN))
 
 #define IS_GMP_WARN(_x) ((_X > GMP_STAT_WARN_BEGIN))
+=======
+#define GMP_STATUS_WARN_TYPE       (0x0001)
+#define GMP_STATUS_ERRO_TYPE       (0x8001)
+
+// This area to define all warnings or errors.
+#define GMP_STATUS_OK				(0x0000)
+#define GMP_STATUS_GENERAL_WARN     (GMP_STATUS_WARN_TYPE + 0)
+#define GMP_STATUS_GENERAL_ERROR	(GMP_STATUS_ERRO_TYPE + 0)
+#define GMP_STATUS_WARN_PRINT       (GMP_STATUS_WARN_TYPE + 1)
+#define GMP_STATUS_UNKNOWN_CMD      (GMP_STATUS_WARN_TYPE + 2)
+
+
+
+
+
+// This area to define all errors.
+// When these error happened, the software usually abort.
+// This value is for unknown fatal error.
+#define GMP_STATUS_FATAL_ERROR	(0xFFFF)
+
+// This macro helps to judge if a status code is a fatal error
+#define IS_GMP_ERROR(x) ((x & 0x8000) != 0)
+
 
 #pragma endregion GMP_Status_def
 
@@ -182,6 +208,7 @@ extern "C"
     // @param len    : the length of the content.
     // @retval       : This function returns nothing. This function should designed as nothrow function.
     void gmp_dbg_write_default(_IN const char* content, _IN gmp_size_t len);
+
 
     // @brief Get system tick number
     // @param null
@@ -251,6 +278,7 @@ extern "C"
     //        And user should call this function in init process.
     void gmp_startup(void);
 
+
     // @brief This variable is used to be a counter of all the infos, warnings and errors.
     extern uint32_t g_info_cnt;
 
@@ -260,6 +288,7 @@ extern "C"
 
     // @brief This variable is used to be a counter of all errors.
     extern uint32_t g_erro_cnt;
+
 
 #ifdef __cplusplus
 }

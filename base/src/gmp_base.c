@@ -21,6 +21,7 @@ __weak void gmp_abort_callback(void)
 	// do nothing
 }
 
+
 // Default tick function : No tick, all sequential routine couldn't run
 __weak gmp_size_t gmp_get_tick(void)
 {
@@ -33,7 +34,9 @@ void gmp_abort(void)
 {
 	// release GMP library resources
 
+
 	// invoke user abort function
+
 	gmp_abort_callback();
 
 	// endless loop
