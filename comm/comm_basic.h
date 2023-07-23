@@ -1001,17 +1001,20 @@ public:
 // General-Purpose Input/Output(GPIO)
 // NOTE: This class hasn't been implement correctly.
 #pragma region GPIO_DEVICE_DEF
-class gpio_port_base
+class gpio_port
 	: public cmd_device
 {
 public:
 	// ctor & dtor
-	gpio_port_base()
+	gpio_port()
 	{
 
 	}
 
 public:
+	// Kernel function
+	void 
+
 	// This class will implement the cmd function.
 	RESPONSE_CMD
 
