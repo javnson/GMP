@@ -2,8 +2,9 @@
 // This file contains all the definition of all utility functions of device.
 
 // EM-LIB basic objects
-#include <./comm/comm_basic.h>
-#include <./basic/gmp_base.h>
+//#include <./comm/comm_basic.h>
+#include "../comm_basic.h"
+#include <./base/gmp_base.h>
 
 #ifndef EM_DISABLE_DEVICE_UTILITY
 #include <stdarg.h>
@@ -14,7 +15,7 @@
 // There are utility function definitions
 #ifndef EM_DISABLE_DEVICE_UTILITY
 
-gmp_ptrdiff_t put_format_string(io_device_base* device, gmp_addr_t addr, const char* p_fmt, ...)
+gmp_diff_t put_format_string(io_device_base* device, gmp_addr_t addr, const char* p_fmt, ...)
 {
 	char str[SHOW_BUF_LEN];
 	uint8_t len;

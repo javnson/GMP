@@ -1,6 +1,6 @@
 
 // platform includes
-#include <./basic/gmp_base.h>
+#include <./base/gmp_base.h>
 #include <./comm/comm_basic.h>
 
 #pragma region PHY_DEF
@@ -50,6 +50,7 @@ typedef union _tag_phy_state_t
 #pragma endregion ErrorCode
 
 class phy_dev
+	: public cmd_device
 {
 	// UUID section
 public:
@@ -75,25 +76,9 @@ public:
 	}
 
 public:
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
 
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @param wparam the word parameter
-	 * @param lparam the long ptr parameter
-	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	// This class will implement the cmd function.
+	RESPONSE_CMD
 
 public:
 	/**
@@ -103,7 +88,7 @@ public:
 	 * @author : Javnson(javnson@zju.edu.cn)
 	 * @date   : 20230703
 	 */
-	gmp_status_t attach(io_device_base* dev);
+	gmp_stat_t attach(io_device_base* dev);
 
 	/**
 	 * @brief This fucntion attach device handle to the physical device.
@@ -151,34 +136,17 @@ public:
 	{}
 
 public:
-	gmp_status_t push(gmp_size_t n);
-	gmp_status_t pull(gmp_size_t n);
+	gmp_stat_t push(gmp_size_t n);
+	gmp_stat_t pull(gmp_size_t n);
 
-	gmp_status_t push();
-	gmp_status_t pull();
+	gmp_stat_t push();
+	gmp_stat_t pull();
 
 public:
 	// kernal virtual function
 
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
-
-	/**
-	 * @brief This function could pass a command.
-	 * @param cmd the command.
-	 * @param wparam the word parameter
-	 * @param lparam the long ptr parameter
-	 * @return if the command is done corrected.
-	 * @author : Javnson(javnson@zju.edu.cn)
-	 * @date   : 20230606
-	 */
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_ptraddr_t lparam);
+	// This class will implement the cmd function.
+	RESPONSE_CMD
 
 
 public:
@@ -188,5 +156,5 @@ public:
 	// members
 	dev_record_t *records;
 	uint32_t record_len;
-	gmp_ptraddr_t addr;
+	gmp_addr_t addr;
 };

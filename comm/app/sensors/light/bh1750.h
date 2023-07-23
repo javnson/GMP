@@ -6,7 +6,7 @@
 
 #ifndef _FILE_BH1750_H_
 
-// cmd table
+// opecode table
 #define BH1750_CMD_POWER_DOWN		(0b00000000)
 #define BH1750_CMD_POWER_ON			(0b00000001)
 #define BH1750_CMD_RESET			(0b00000111)
@@ -47,8 +47,9 @@ public:
 	{}
 
 public:
-	virtual gmp_ptrdiff_t command(uint32_t cmd);
-	virtual gmp_ptrdiff_t command(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
+	
+	// This class will implement the cmd function.
+	RESPONSE_CMD
 
 public:
 	dev_record_t temp_rec;
