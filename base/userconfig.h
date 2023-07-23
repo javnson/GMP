@@ -6,12 +6,15 @@
 #define _FILE_USERCONFIG_EXAMPLE_H_
 
 // Select DEVICE PLATFORM
-//#define _GMP_STM32
-//#define _GMP_STM32L1
+#define _GMP_STM32
+#define _GMP_STM32L1
 
 // Select device DSP
-#define _GMP_C2000
-#define _GMP_28x
+//#define _GMP_C2000
+//#define _GMP_28x
+
+
+#define _GMP_BSP_GPIO_SUPPORT
 
 
 //////////////////////////////////////////////////////////////////////////
