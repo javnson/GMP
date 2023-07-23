@@ -20,7 +20,7 @@
 #define BH1750_CMD_CHG_TIME_L(MT)	(MT & 0b00011111 | 0b01100000)
 
 class bh1750
-	: public record_dev
+	: public phy_dev
 {
 public:
 

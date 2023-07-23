@@ -76,6 +76,14 @@ public:
 	}
 
 public:
+	// kernel virtual function
+
+
+	virtual uint32_t read(uint32_t reg_addr, uint8_t len);
+
+	virtual uint32_t write(uint32_t reg_addr, uint32_t reg_content, uint8_t len);
+
+
 
 	// This class will implement the cmd function.
 	RESPONSE_CMD
@@ -104,57 +112,90 @@ private:
 };
 
 
-typedef struct _tag_dev_record_t
-{
-	// The name of the record
-//	uint32_t key;
+//typedef struct _tag_dev_record_t
+//{
+//	// The name of the record
+////	uint32_t key;
+//
+//	// memory space & local mapping.
+//	uint32_t value;
+//	uint8_t v_length;
+//
+//	// The command retrieving the value
+//	uint32_t cmd;
+//}dev_record_t;
+//
+//
+//
+//
+//class record_dev
+//	: public phy_dev
+//{
+//public:
+//	// ctor & dtor
+//	record_dev()
+//	{
+//		records = nullptr;
+//		record_len = 0;
+//		addr = 0x0000;
+//	}
+//
+//	~record_dev()
+//	{}
+//
+//public:
+//	gmp_stat_t push(gmp_size_t n);
+//	gmp_stat_t pull(gmp_size_t n);
+//
+//	gmp_stat_t push();
+//	gmp_stat_t pull();
+//
+//public:
+//	// kernel virtual function
+//
+//	// This class will implement the cmd function.
+//	RESPONSE_CMD
+//
+//
+//public:
+//	// utilities
+//
+//public:
+//	// members
+//	dev_record_t *records;
+//	uint32_t record_len;
+//	gmp_addr_t addr;
+//};
+//
+//// @brief This class describe a type of device that owns a lot of registers.
+//// Local buffer is not necessary. Every time you request a value or writing a value 
+//// this class will synchronize your request to the device, by writing registers.
+//class reg_dev
+//	:public phy_dev
+//{
+//public:
+//	// ctor & dtor
+//	reg_dev()
+//	{}
+//
+//	~reg_dev()
+//	{
+//
+//	}
+//
+//public:
+//	// kernel virtual function
+//
+//
+//	virtual uint32_t read(uint32_t reg_addr,uint8_t len);
+//
+//	virtual uint32_t write(uint32_t reg_addr, uint32_t reg_content, uint8_t len);
+//
+//
+//	// This class will implement the cmd function.
+//	RESPONSE_CMD
+//
+//public:
+//	uint32_t device_addr;
+//};
 
-	// memory space & local mapping.
-	uint32_t value;
-	uint8_t v_length;
-
-	// The command retriving the value
-	uint32_t cmd;
-}dev_record_t;
-
-
-
-
-class record_dev
-	: public phy_dev
-{
-public:
-	// ctor & dtor
-	record_dev()
-	{
-		records = nullptr;
-		record_len = 0;
-		addr = 0x0000;
-	}
-
-	~record_dev()
-	{}
-
-public:
-	gmp_stat_t push(gmp_size_t n);
-	gmp_stat_t pull(gmp_size_t n);
-
-	gmp_stat_t push();
-	gmp_stat_t pull();
-
-public:
-	// kernal virtual function
-
-	// This class will implement the cmd function.
-	RESPONSE_CMD
-
-
-public:
-	// utilities
-
-public:
-	// members
-	dev_record_t *records;
-	uint32_t record_len;
-	gmp_addr_t addr;
-};
