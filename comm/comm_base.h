@@ -211,7 +211,7 @@ typedef uint32_t gmp_device_cmd;
 		virtual gmp_stat_t cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 #define RESPONSE_RW      protected:               \
-		virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length); \
+		virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t cap, gmp_size_t len = 0); \
 		virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 // Check if device still in error condition and think err_cond should resolve first.
@@ -460,12 +460,13 @@ public: // Core functions
 	 * @brief read a string of message from the device, which will call read_ex to fulfill the task.
 	 * @param addr the address for the device
 	 * @param data the pointer for data, which are treated as a read buffer
-	 * @param length the length of the data buffer
+	 * @param capacity the capacity of the data pointer
 	 * @return real length that been read
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	gmp_diff_t read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	gmp_diff_t read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity);
+
 	/**
 	 * @brief write a string of message for the device, which will call write_ex to fulfill the task.
 	 * @param addr the address for the device
@@ -476,6 +477,20 @@ public: // Core functions
 	 * @date   : 20230605
 	 */
 	gmp_diff_t write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_size_t length);
+
+	/**
+	 * @brief read a string of message from the device, which will call read_ex to fulfill the task.
+	 * @param addr the address for the device
+	 * @param data the pointer for data, which are treated as a read buffer
+	 * @param capacity the capacity of the data pointer
+	 * @param length the length of the data buffer for sending
+	 * @note  at the time (length == 0), the functionality of `read_write` function is equivalent to `read`.
+	 *        `read_write` need both W and R character, but `read` only R character.
+	 * @return real length that been read
+	 * @author : Javnson
+	 * @date   : 20230805
+	 */
+	gmp_diff_t read_write(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity, gmp_size_t length = 0);
 
 	/**
 	 * @brief read a string of message from the device, which will call read_ex to fulfill the task.
@@ -583,7 +598,7 @@ public:
 	 * @author : Javnson
 	 * @date   : 20230718
 	 */
-	gmp_stat_t preinit();
+	gmp_stat_t enable();
 
 	/**
 	 * @brief Ready function check if device fulfill the requirement, and maintaining state machine.
@@ -599,7 +614,7 @@ public:
 	 * @brief This function reset the peripheral, maintaining state machine.
 	 *        If you is using initialize code generation, for example CUBEMX, you should using macro GMP_INIT_DEPOSIT.
 	 *		  And under this condition, this function would only change the state machine without any substantive operations.
-	 *        State machine DEVICE_STATE_? -> DEVICE_STATE_READY
+	 *        State machine DEVICE_STATE_? -> DEVICE_STATE_CONFIG
 	 * @return if the command can't run correctly, the program would abort.
 	 * @author : Javnson
 	 * @date   : 20230704

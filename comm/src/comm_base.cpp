@@ -14,42 +14,48 @@
 gmp_stat_t cmd_device::cmd(uint32_t cmd)
 {
 
-	//switch (cmd)
-	//{
-	//	case 
-	//}
+	switch (cmd)
+	{
+	case DEVICE_CMD_NULL:
+		// The last command named NULL command.
+		// This command is used to test command reaction.
+		if (m_state.bits.state_machine >= DEVICE_STATE_VERBOSE_2)
+			gmp_print(_TEXT("[INFO] Device Command Null react!\r\n"));
 
+		return DEVICE_OK;
 
+	default:
+		//print unknown command
+		error(DEVICE_ERR_UNKNOWN_CMD);
 
-	//print unknown command
-	error(DEVICE_ERR_UNKNOWN_CMD);
+		// When the function are called, the command is an absolutely unknown command.
+		return GMP_STAT_UNDEFINED_ACTION;
 
-	// When the function are called, the command is an absolutely unknown command.
-	return GMP_STAT_UNDEFINED_ACTION;
-
+	}
 }
 
 gmp_stat_t cmd_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
-	// print unknown command
-	error(DEVICE_ERR_UNKNOWN_CMDEX);
 
-	// When the function are called, the command is an absolutely unknown command.
-	return GMP_STAT_UNDEFINED_ACTION;
+	switch (cmd)
+	{
+	case DEVICE_CMD_NULL:
+		// The last command named NULL command.
+		// This command is used to test command reaction.
+		if (m_state.bits.state_machine >= DEVICE_STATE_VERBOSE_2)
+			gmp_print(_TEXT("[INFO] Device Command Null react!\r\n"));
 
+		return DEVICE_OK;
+
+	default:
+		//print unknown command
+		error(DEVICE_ERR_UNKNOWN_CMD);
+
+		// When the function are called, the command is an absolutely unknown command.
+		return GMP_STAT_UNDEFINED_ACTION;
+
+	}
 }
-
-// uint32_t cmd_device::get_device_usage_label()
-// {
-// 	return m_device_usage_label;
-// }
-
-// void cmd_device::clear_error_cnt()
-// {
-// //	m_error_cnt = 0;
-// //	m_warn_cnt = 0;
-// 	warn_cond = 0;
-// }
 
 
 void cmd_device::set_verbose(uint8_t verbose)
@@ -130,11 +136,10 @@ void cmd_device::clear_erro()
 // io_device_base
 #pragma region io_device_base_source
 
-gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity)
 {
-	gmp_assert(m_dev != nullptr);
-
 	gmp_assert(data != nullptr);
+	//gmp_assert(m_dev != nullptr);
 
 
 	// judge if the condition is meet
@@ -143,56 +148,16 @@ gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_
 		return -1;
 	}
 
-	//// Condition 0: If any fatal error haven't been clear
-
-	//CHECK_ERROR_COND
-	//	return  -1;
-
-	//// Condition 1: read the device is permitted.
-	//if (character.bits.read == DEV_CHAR_DISABLE) // read operation is not permitted.	
-	//{
-	//	refuse(addr, data, length);
-	//	if (error(DEVICE_ERR_UNSUPPORT_R))
-	//		return -1;
-	//}
-
-	//// Condition 2: Device is locked
-
-	//if (lock.bits.read != DEV_CHAR_LOCKED)
-	//{
-	//	refuse(addr, data, length);
-	//	if (error(DEVICE_ERR_LOCKED))
-	//		return -1;	
-	//}
-
-	//// Condition 3: Device is not yet ready
-	//if (m_state.bits.state_machine != DEVICE_STATE_READY)
-	//{
-	//	refuse(addr, data, length);
-	//	if (error(DEVICE_ERR_NOT_READY))
-	//		return  -1;		
-	//}
-
-	//// Condition 4: Check if memory is useful
-	//if (data == NULL)
-	//{
-	//	error(DEVICE_ERR_MEMORY_UNAVAILABLE);
-	//	refuse(addr, data, length);
-	//}
-
-	// boundary case
-	//if (length == 0)
-	//	return 0;
-
-
-	return read_ex(addr, data, length);
+	// call virtual function and do read routine
+	return read_ex(addr, data, capacity, 0);
 }
 
 
 gmp_diff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_size_t length)
 {
 	gmp_assert(data != nullptr);
-	gmp_assert(m_dev != nullptr);
+	//gmp_assert(m_dev != nullptr);
+
 
 	// judge if the condition is meet
 	if (!is_writeable())
@@ -200,49 +165,29 @@ gmp_diff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_
 		return -1;
 	}
 
-	//// Condition 0: If any fatal error haven't been clear
-	//CHECK_ERROR_COND
-	//	return  -1;
-
-	//// Condition 1: write the device is permitted.
-	//if (character.bits.write == 0) // write oper is not permitted.	
-	//{
-	//	refuse(addr, data, length);
-	//	if (error(DEVICE_ERR_UNSUPPORT_W))
-	//		return -1;
-	//}
-
-	//// Condition 2: Device is locked
-	//if (lock.bits.write != 0)
-	//{
-	//	refuse(addr, data, length);
-	//	if (error(DEVICE_ERR_LOCKED))
-	//		return -1;
-	//}
-
-	//// Condition 3: Device is not yet ready
-	//if (m_state.bits.state_machine != DEVICE_STATE_READY)
-	//{
-	//	refuse(addr, data, length);
-	//	if (error(DEVICE_ERR_NOT_READY))
-	//		return  -1;
-	//}
-
-	// Condition 4: Check if memory is useful
-	//if (data == NULL)
-	//{
-	//	error(DEVICE_ERR_MEMORY_UNAVAILABLE);
-	//	refuse(addr, data, length);
-	//}
-
-	// boundary case
-	// CHECK: is this safe
-	//if (length == 0)
-	//	return 0;
-
+	// call virtual function and do write routine.
 	return write_ex(addr, data, length);
+}
+
+gmp_diff_t read_write(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity, gmp_size_t length)
+{
+	gmp_assert(data != nullptr);
+	//gmp_assert(m_dev != nullptr);
+
+
+	// check character and lock state
+	if (!is_readable())
+		return -1;
+
+	if (!is_writeable())
+		return -1;
+
+	// Call virtual function and do read_write routine.
+	return read_ex(addr, data, capacity, length);
 
 }
+
+
 
 void io_device_base::refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
@@ -268,41 +213,51 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 		lock = character;
 		break;
 	case DEVICE_CMD_RESET:
+		// Step 0 User must do first
+		// 1. User should stop any operation, so busy state will release.
+		// 2. For any peripheral, user should clear all the error flag;
+		//    or for any physical device, user should send reset signal. 
+		// 3. For any software, user should clear software constrains.
+		// And if user find any fatal error, user should return a non-zero value.
+		
+		// Step 1 update state machine
+		if (erro_cond)
+		{
+			// check state machine
+			if (m_state.bits.state_machine == DEVICE_STATE_READY)
+			{
+				m_state.bits.state_machine = DEVICE_STATE_CONFIG;
+			}
+			else if (m_state.bits.state_machine == DEVICE_STATE_CONFIG)
+			{
+				m_state.bits.state_machine = DEVICE_STATE_CONFIG;
+			}
+			else if (m_state.bits.state_machine == DEVICE_STATE_BUSY)
+			{
+				m_state.bits.state_machine = DEVICE_STATE_CONFIG;
+			}
+			else if (m_state.bits.state_machine == DEVICE_STATE_LOWPOWER)
+			{
+				m_state.bits.state_machine = DEVICE_STATE_CONFIG;
+			}
+			else //if (m_state.bits.state_machine == DEVICE_STATE_SHUTDOWN)
+				;
 
+
+		}
+
+		// step 2 judge if error happened, and clear the error.
+		erro_cond = 0;
+		warn_cond = 0;
 
 		break;
 	case DEVICE_CMD_INIT:
-		// no device are attached to the class
-		if (m_dev == nullptr)
-			return DEVICE_ERR_NULL_DEV_HANDLE;
 		
-		// check error condition
-		CHECK_ERROR_COND
-			return DEVICE_ERR_COND;
 
-		// check if state machine is fulfilling the requirement.
-		if (m_state.bits.state_machine == DEVICE_STATE_READY)
-		// no need to init, quit
-		{
-			if (error(DEVICE_ERR_HAVE_INITED))
-				return DEVICE_OK;
-		}
-		else if((m_state.bits.state_machine == DEVICE_STATE_SHUTDOWN) || 
-			(m_state.bits.state_machine == DEVICE_STATE_CONFIG))
-
-		{
-			// Do nothing just change state machine.
-			m_state.bits.state_machine = DEVICE_STATE_READY;
-		}
-		else // error state no need to init
-		{
-			if (error(DEVICE_ERR_BAD_CMD))
-				return DEVICE_ERR_BAD_CMD;
-		}
 		break;
 	case DEVICE_CMD_SHUTDOWN:
-		// Call virtual function
-		this->shutdown();
+		
+
 		break;
 	case DEVICE_CMD_PNP_TEST:
 		// do nothing
@@ -311,18 +266,9 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 	case DEVICE_CMD_PNP_EJECT:
 		// do nothing
 		break;
-	case DEVICE_CMD_NULL:
-		// The last command named NULL command.
-		// This command is used to test command reaction.
-		if (m_state.bits.state_machine >= DEVICE_STATE_VERBOSE_2)
-			gmp_print(_TEXT("[INFO] Device Command Null react!\r\n"));
-		break;
-	default:
-		// return to cmd_device class to deal with
-		cmd_device::cmd(cmd);
-		break;
 	}
-	return GMP_STAT_OK;
+
+	return cmd_device::cmd(cmd);
 }
 
 
@@ -361,6 +307,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lpar
 
 	return GMP_STAT_OK;
 }
+
 
 gmp_diff_t io_device_base::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
 {
@@ -405,38 +352,37 @@ gmp_stat_t io_device_base::init()
 	// You should change state machine firstly, and then do init process.
 }
 
-gmp_stat_t io_device_base::preinit()
+gmp_stat_t io_device_base::enable()
 {
-	return cmd(DEVICE_CMD_PREINIT);
+	return cmd(DEVICE_CMD_ENABLE);
 }
 
 gmp_stat_t io_device_base::ready()
 {
-	return cmd(DEVICE_CMD_READY);
+	// Check if in error state
+	CHECK_ERROR_COND
+		return  DEVICE_ERR_COND;
+
+
+	// Check state machine.
+	if (m_state.bits.state_machine == DEVICE_STATE_SHUTDOWN)
+		return cmd(DEVICE_CMD_SETUP);
+	else if (m_state.bits.state_machine == DEVICE_STATE_CONFIG)
+		return cmd(DEVICE_CMD_INIT);
+	else if (m_state.bits.state_machine == DEVICE_STATE_READY)
+		return DEVICE_OK;
+	else if (m_state.bits.state_machine == DEVICE_STATE_BUSY)
+	{
+		if (error(DEVICE_ERR_CANNOT_INIT))
+			return DEVICE_ERR_CANNOT_INIT;
+	}
+
+	return DEVICE_ERR_CANNOT_INIT;
 }
 
 gmp_stat_t io_device_base::reset()
 {
-	// step 1 judge if error happened, and clear the error.
-
-
-	// Step 2 update state machine
-
-	
-
-	// If device has meets fatal error and re-initialize is necessary
-	//if (m_state.bits.state_machine == DEVICE_STATE_RUNTIME_ERROR)
-	//{
-	//	m_state.bits.state_machine = DEVICE_STATE_READY;
-	//	warning(DEVICE_RECOVER_FROM_ERROR);
-	//}
-	//// If device has meets runtime error and should clear error flag or error register.
-	//else if (m_state.bits.state_machine == DEVICE_STATE_ERROR)
-	//{
-	//	m_state.bits.state_machine = DEVICE_STATE_SHUTDOWN;
-	//	warning(DEVICE_RECOVER_FROM_RUNTIME);
-	//}
-	return GMP_STAT_OK;
+	return cmd(DEVICE_CMD_RESET);
 }
 
 gmp_stat_t io_device_base::shutdown()
@@ -463,6 +409,10 @@ gmp_stat_t spi_device::cmd(uint32_t cmd)
 	return io_device_base::cmd(cmd);
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+// UART device
+
 gmp_stat_t uart_device::cmd(uint32_t cmd)
 {
 	return io_device_base::cmd(cmd);
@@ -472,6 +422,10 @@ gmp_stat_t uart_device::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam)
 {
 	return io_device_base::cmd(cmd, wparam, lparam);
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+// IIC device
 
 gmp_stat_t i2c_device::cmd(uint32_t cmd)
 {

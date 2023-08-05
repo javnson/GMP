@@ -234,6 +234,9 @@ extern "C"
     //////////////////////////////////////////////////////////////////////////
     // GMP library is based on ASSERT, this section provided a ASSERT independently. 
     // This function will be called when it's necessary to ensure param format.
+    //
+    // NOTE The function of `gmp_assert` should be call every time user need to 
+    // use any param.
 
     // This function would be called, when assert was trigger.
     // This function will not return, and this function will call gmp_abort() function before shutdown.
