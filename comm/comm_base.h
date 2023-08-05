@@ -120,54 +120,6 @@ typedef union _tag_dev_char_t
 #define DEVICE_STATE_VERBOSE_INFO    (0x04)
 
 
-
-
-
-
-// gmp_device_state_t::bits::characters provides 4 inner characters.
-#define DEVICE_STATE_CHAR_NULL      (0x00)
-#define DEVICE_STATE_CHAR_W         (0x01) // write
-#define DEVICE_STATE_CHAR_R         (0x02) // read
-#define DEVICE_STATE_CHAR_C         (0x04) // config
-#define DEVICE_STATE_CHAR_P         (0x08) // power mgr: init, reset, halt
-#define DEVICE_STATE_CHAR_PNP       (0X10) // 
-//#define DEVICE_STATE_CHAR_R         (0x08)
-
-// gmp_device_state_t::bits::lock
-#define DEVICE_STATE_LOCK_DISABLE   (0x00)
-#define DEVICE_STATE_LOCK           (0x01)
-#define DEVICE_STATE_UNLOCK         (0x02)
-
-typedef struct _tag_dev_char_t
-{
-	uint32_t write : 1;
-	uint32_t read : 1;
-	uint32_t config : 1;
-	uint32_t power : 1;
-	uint32_t pnp : 1;
-}dev_char_t;
-
-#define DEV_CHAR_LOCKED				(1)
-#define DEV_CHAR_UNLOCKED			(0)
-
-#define DEV_CHAR_PERMIT             (1)
-#define DEV_CHAR_DISABLE            (0)
-
-// gmp_device_state_t::bits::warning
-#define DEVICE_STATE_WARNING         (0x01)
-#define DEVICE_STATE_NORMAL          (0x00)
-
-// gmp_device_state_t::bits::verbose
-#define DEVICE_STATE_VERBOSE_NULL    (0x00) // No print
-#define DEVICE_STATE_VERBOSE_1       (0x01) // less print, mainly error
-#define DEVICE_STATE_VERBOSE_ERROR   (0x01)
-#define DEVICE_STATE_VERBOSE_2       (0x02) // more print, mainly warning
-#define DEVICE_STATE_VERBOSE_WARNING (0x02)
-#define DEVICE_STATE_VERBOSE_3       (0x03) // mostly print, mainly info
-#define DEVICE_STATE_VERBOSE_INFO    (0x04)
-
-
-
 #pragma endregion DEVICE_STATE_DEF
 
 // Command Definition
@@ -178,12 +130,12 @@ typedef uint32_t gmp_device_cmd;
 
 // Basic Command
 #define DEVICE_CMD_NULL		(0x00)
-#define DEVICE_CMD_RESET	(0x01)
-#define DEVICE_CMD_INIT     (0x02)
-#define DEVICE_CMD_PREINIT  (0x03)
-#define DEVICE_CMD_READY    (0x04)
-#define DEVICE_CMD_SHUTDOWN (0x05)
-#define DEVICE_CMD_LOWPOWER (0x06)
+#define DEVICE_CMD_RESET	(0x01) // ?(!shutdown) -> config
+#define DEVICE_CMD_ENABLE   (0x02) // shutdown     -> config
+#define DEVICE_CMD_INIT		(0x03) // config       -> ready 
+#define DEVICE_CMD_SETUP    (0x04) // shutdown     -> ready
+#define DEVICE_CMD_SHUTDOWN (0x05) // ?			   -> shutdown 
+#define DEVICE_CMD_LOWPOWER (0x06) // 
 #define DEVICE_CMD_LOCK     (0x07)
 #define DEVICE_CMD_UNLOCK   (0x08)
 #define DEVICE_CMD_VERBOSE  (0x09) // Set verbose level
@@ -220,9 +172,9 @@ typedef uint32_t gmp_device_cmd;
 #pragma region ErrorCode
 // io_device_base error code definition
 #define DEVICE_OK                     (0x0000)
-#define DEVICE_INFO_BEGIN          (0x00000000)
-#define DEVICE_WARN_BEGIN          (0x80000000)
-#define DEVICE_ERRO_BEGIN          (0xC0000000)
+#define DEVICE_INFO_BEGIN          (GMP_STAT_COMM_INFO_BEGIN)
+#define DEVICE_WARN_BEGIN          (GMP_STAT_COMM_WARN_BEGIN)
+#define DEVICE_ERRO_BEGIN          (GMP_STAT_COMM_ERRO_BEGIN)
 
 
 // unsupported operation happened
@@ -491,7 +443,7 @@ public:
 		//m_state.bits.pnp = DEVICE_STATE_PNP_DISBALE;
 		//m_state.bits.rpc = DEVICE_STATE_RPC_DISABLE;
 
-		character.all = DEVICE_STATE_CHAR_NULL;
+		character.all = DEVICE_STATE_CHAR_W | DEVICE_STATE_CHAR_R;
 		lock.all = DEVICE_STATE_CHAR_NULL;
 
 	}
@@ -517,7 +469,7 @@ public: // Core functions
 	/**
 	 * @brief write a string of message for the device, which will call write_ex to fulfill the task.
 	 * @param addr the address for the device
-	 * @param data the pointer for data, which would be sent
+	 * @param data the pointer for  data, which would be sent
 	 * @param length the length of the data buffer
 	 * @return real length that been written
 	 * @author : Javnson
@@ -780,6 +732,77 @@ protected:
 		m_state.bits.pnp = pnp_state;
 	}
 
+
+public:
+
+	// @return 1 : readable
+	//		   0 : not readable
+	inline gmp_fast_t is_readable()
+	{
+		// Condition 0: If any fatal error haven't been clear
+		CHECK_ERROR_COND
+			return  0;
+
+		// Condition 1: read the device is permitted.
+		if (character.bits.read == DEV_CHAR_DISABLE) // read operation is not permitted.	
+		{
+			refuse(addr, data, length);
+			if (error(DEVICE_ERR_UNSUPPORT_R))
+				return 0;
+		}
+
+		// Condition 2: Device is locked
+		if (lock.bits.read != DEV_CHAR_LOCKED)
+		{
+			refuse(addr, data, length);
+			if (error(DEVICE_ERR_LOCKED))
+				return 0;
+		}
+
+		// Condition 3: Device is not yet ready
+		if (m_state.bits.state_machine != DEVICE_STATE_READY)
+		{
+			refuse(addr, data, length);
+			if (error(DEVICE_ERR_NOT_READY))
+				return  0;
+		}
+
+		return 1;
+	}
+
+	// @return 1 : writeable
+	//		   0 : not writeable
+	inline gmp_fast_t is_writeable()
+	{
+		// Condition 0: If any fatal error haven't been clear
+		CHECK_ERROR_COND
+			return  0;
+
+		// Condition 1: write the device is permitted.
+		if (character.bits.write == 0) // write oper is not permitted.	
+		{
+			refuse(addr, data, length);
+			if (error(DEVICE_ERR_UNSUPPORT_W))
+				return 0;
+		}
+
+		// Condition 2: Device is locked
+		if (lock.bits.write != 0)
+		{
+			refuse(addr, data, length);
+			if (error(DEVICE_ERR_LOCKED))
+				return 0;
+		}
+
+		// Condition 3: Device is not yet ready
+		if (m_state.bits.state_machine != DEVICE_STATE_READY)
+		{
+			refuse(addr, data, length);
+			if (error(DEVICE_ERR_NOT_READY))
+				return 0;
+		}
+		return 1;
+	}
 };
 
 
@@ -1002,6 +1025,70 @@ public:
 // NOTE: This class hasn't been implement correctly.
 #pragma region GPIO_DEVICE_DEF
 
+
+// @brief This class abstract the whole GPIO to a device.
+// This device may exist only one instance. The GMP library use this class to implement PRC of GPIO.
+class gpio_dev
+	: public cmd_device
+{
+public:
+	// ctor & dtor
+	gpio_dev()
+	{}
+
+	~gpio_dev()
+	{}
+
+public:
+	// Kernel function
+	/**
+	 * @brief This function set a GPIO to high level.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t set(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function set a GPIO to low level.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t reset(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function change the level of a GPIO.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t toggle(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function read a specified GPIO port.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return 0 the GPIO has low level, 1 the GPIO has high level,
+	 *	       -1 the read method invalid.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static int8_t read(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+public:
+	// This class will implement the cmd function.
+	RESPONSE_CMD
+
+};
+
+
 // @brief This class implement a suspended GPIO handle. User may use this handle easily.
 class gpio_port
 {
@@ -1080,69 +1167,6 @@ public:
 
 
 };
-
-// @brief This class abstract the whole GPIO to a device.
-// This device may exist only one instance. The GMP library use this class to implement PRC of GPIO.
-class gpio_dev
-	: public cmd_device
-{
-public:
-	// ctor & dtor
-	gpio_dev()
-	{}
-
-	~gpio_dev()
-	{}
-
-public:
-	// Kernel function
-	/**
-	 * @brief This function set a GPIO to high level.
-	 * @param port_group the gpio group
-	 * @param gpio_index the gpio index
-	 * @return if gpio is set or clear.
-	 * @author : Javnson
-	 * @date   : 20230723
-	 */
-	static gmp_stat_t set(gmp_addr_t port_group, gmp_size_t gpio_index);
-
-	/**
-	 * @brief This function set a GPIO to low level.
-	 * @param port_group the gpio group
-	 * @param gpio_index the gpio index
-	 * @return if gpio is set or clear.
-	 * @author : Javnson
-	 * @date   : 20230723
-	 */
-	static gmp_stat_t reset(gmp_addr_t port_group, gmp_size_t gpio_index);
-
-	/**
-	 * @brief This function change the level of a GPIO.
-	 * @param port_group the gpio group
-	 * @param gpio_index the gpio index
-	 * @return if gpio is set or clear.
-	 * @author : Javnson
-	 * @date   : 20230723
-	 */
-	static gmp_stat_t toggle(gmp_addr_t port_group, gmp_size_t gpio_index);
-
-	/**
-	 * @brief This function read a specified GPIO port.
-	 * @param port_group the gpio group
-	 * @param gpio_index the gpio index
-	 * @return 0 the GPIO has low level, 1 the GPIO has high level,
-	 *	       -1 the read method invalid.
-	 * @author : Javnson
-	 * @date   : 20230723
-	 */
-	static int8_t read(gmp_addr_t port_group, gmp_size_t gpio_index);
-
-public:
-	// This class will implement the cmd function.
-	RESPONSE_CMD
-
-};
-
 
 
 

@@ -1,7 +1,7 @@
 
 // platform includes
 #include <base/gmp_base.h>
-#include <comm/comm_basic.h>
+#include <comm/comm_base.h>
 #include <comm/protocol_base.h>
 
 #pragma region PHY_DEF
@@ -24,22 +24,15 @@ typedef union _tag_phy_state_t
 //  ^                     |
 //  \ - - - - - - - - - - /
 // gmp_device_state_t::bits::state_machine provides 4 inner states
-#define PHY_STATE_READY          (0x00)
-#define PHY_STATE_PREOP          (0x01)
-#define PHY_STATE_ONLINE         (0x02)
-#define PHY_STATE_BUZY           (0x03)
-#define PHY_STATE_SHUTDOWN       (0x04)
-#define PHY_STATE_ERROR          (0x05)
-
+#define PHY_STAT_READY          (0x00)
+#define PHY_STAT_PREOP          (0x01)
+#define PHY_STAT_ONLINE         (0x02)
+#define PHY_STAT_BUZY           (0x03)
+#define PHY_STAT_SHUTDOWN       (0x04)
+#define PHY_STAT_ERROR          (0x05)
+				
 
 #pragma endregion
-
-
-#define PHY_CMD_NULL			(0x00)
-#define PHY_CMD_RESET			(0x01)
-#define PHY_CMD_INIT			(0x02)
-#define PHY_CMD_SHUTDOWN		(0x03)
-
 
 #pragma region ErrorCode
 // This region provide error code for phy_device
@@ -54,9 +47,9 @@ typedef union _tag_phy_state_t
 
 // Analog sensor protocol
 #define AS_CMD_CALIBRATION  	(0x1001)
-#define AS_CMD_SETUP     		(0x1002)
-#define AS_CMD_GET_SRC_DATA     (0x1003)
-#define AS_CMD_SET_ACCURACY     (0x1004)
+#define AS_CMD_GET_SRC_DATA     (0x1002)
+#define AS_CMD_SET_ACCURACY     (0x1003)
+#define AS_CMD_SET_DURATION		(0x1004)
 
 #pragma endregion AS_COMMAND
 
@@ -74,7 +67,7 @@ public:
 	//ctor & dtor
 	analog_sensor()
 	{
-
+		character.all = DEVICE_STATE_CHAR_NULL;
 	}
 
 	~analog_sensor()
@@ -84,13 +77,13 @@ public:
 
 public:
 	// kernel virtual function
-	gmp_stat_t init();
+	gmp_stat_t setup();
 
-	gmp_stat_t set_accuracy();
+	gmp_stat_t set_accuracy(uint32_t accuracy);
 
-	gmp_stat_t set_sample_duartion();
+	gmp_stat_t set_sample_duartion(uint32_t sr);
 	
-	virtual uint32_t get_src_data(uint32_t record);
+	virtual uint32_t get_src_data(uint32_t record = 0);
 
 public:
 	// kernel virtual function
@@ -102,7 +95,8 @@ public:
 	RESPONSE_RW
 
 public:
-	
+	// device physical address on the bus.
+	gmp_addr_t dev_addr;
 
 
 };

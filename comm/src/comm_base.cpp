@@ -4,7 +4,7 @@
 #include <string.h>
 
 // platforms
-#include <comm/comm_basic.h>
+#include <comm/comm_base.h>
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -138,36 +138,40 @@ gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_
 
 
 	// judge if the condition is meet
-
-	// Condition 0: If any fatal error haven't been clear
-
-	CHECK_ERROR_COND
-		return  -1;
-
-	// Condition 1: read the device is permitted.
-	if (character.bits.read == DEV_CHAR_DISABLE) // read operation is not permitted.	
+	if (!is_readable())
 	{
-		refuse(addr, data, length);
-		if (error(DEVICE_ERR_UNSUPPORT_R))
-			return -1;
+		return -1;
 	}
 
-	// Condition 2: Device is locked
+	//// Condition 0: If any fatal error haven't been clear
 
-	if (lock.bits.read != DEV_CHAR_LOCKED)
-	{
-		refuse(addr, data, length);
-		if (error(DEVICE_ERR_LOCKED))
-			return -1;	
-	}
+	//CHECK_ERROR_COND
+	//	return  -1;
 
-	// Condition 3: Device is not yet ready
-	if (m_state.bits.state_machine != DEVICE_STATE_READY)
-	{
-		refuse(addr, data, length);
-		if (error(DEVICE_ERR_NOT_READY))
-			return  -1;		
-	}
+	//// Condition 1: read the device is permitted.
+	//if (character.bits.read == DEV_CHAR_DISABLE) // read operation is not permitted.	
+	//{
+	//	refuse(addr, data, length);
+	//	if (error(DEVICE_ERR_UNSUPPORT_R))
+	//		return -1;
+	//}
+
+	//// Condition 2: Device is locked
+
+	//if (lock.bits.read != DEV_CHAR_LOCKED)
+	//{
+	//	refuse(addr, data, length);
+	//	if (error(DEVICE_ERR_LOCKED))
+	//		return -1;	
+	//}
+
+	//// Condition 3: Device is not yet ready
+	//if (m_state.bits.state_machine != DEVICE_STATE_READY)
+	//{
+	//	refuse(addr, data, length);
+	//	if (error(DEVICE_ERR_NOT_READY))
+	//		return  -1;		
+	//}
 
 	//// Condition 4: Check if memory is useful
 	//if (data == NULL)
@@ -177,8 +181,8 @@ gmp_diff_t io_device_base::read(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_
 	//}
 
 	// boundary case
-	if (length == 0)
-		return 0;
+	//if (length == 0)
+	//	return 0;
 
 
 	return read_ex(addr, data, length);
@@ -191,34 +195,38 @@ gmp_diff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_
 	gmp_assert(m_dev != nullptr);
 
 	// judge if the condition is meet
-
-	// Condition 0: If any fatal error haven't been clear
-	CHECK_ERROR_COND
-		return  -1;
-
-	// Condition 1: write the device is permitted.
-	if (character.bits.write == 0) // write oper is not permitted.	
+	if (!is_writeable())
 	{
-		refuse(addr, data, length);
-		if (error(DEVICE_ERR_UNSUPPORT_W))
-			return -1;
+		return -1;
 	}
 
-	// Condition 2: Device is locked
-	if (lock.bits.write != 0)
-	{
-		refuse(addr, data, length);
-		if (error(DEVICE_ERR_LOCKED))
-			return -1;
-	}
+	//// Condition 0: If any fatal error haven't been clear
+	//CHECK_ERROR_COND
+	//	return  -1;
 
-	// Condition 3: Device is not yet ready
-	if (m_state.bits.state_machine != DEVICE_STATE_READY)
-	{
-		refuse(addr, data, length);
-		if (error(DEVICE_ERR_NOT_READY))
-			return  -1;
-	}
+	//// Condition 1: write the device is permitted.
+	//if (character.bits.write == 0) // write oper is not permitted.	
+	//{
+	//	refuse(addr, data, length);
+	//	if (error(DEVICE_ERR_UNSUPPORT_W))
+	//		return -1;
+	//}
+
+	//// Condition 2: Device is locked
+	//if (lock.bits.write != 0)
+	//{
+	//	refuse(addr, data, length);
+	//	if (error(DEVICE_ERR_LOCKED))
+	//		return -1;
+	//}
+
+	//// Condition 3: Device is not yet ready
+	//if (m_state.bits.state_machine != DEVICE_STATE_READY)
+	//{
+	//	refuse(addr, data, length);
+	//	if (error(DEVICE_ERR_NOT_READY))
+	//		return  -1;
+	//}
 
 	// Condition 4: Check if memory is useful
 	//if (data == NULL)
@@ -229,8 +237,8 @@ gmp_diff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_
 
 	// boundary case
 	// CHECK: is this safe
-	if (length == 0)
-		return 0;
+	//if (length == 0)
+	//	return 0;
 
 	return write_ex(addr, data, length);
 

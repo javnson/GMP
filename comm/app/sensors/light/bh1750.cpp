@@ -5,18 +5,19 @@ gmp_stat_t bh1750::cmd(uint32_t cmd)
 	uint8_t opecode;
 	switch (cmd)
 	{
-	case PHY_CMD_SHUTDOWN:
-		opecode = BH1750_CMD_POWER_DOWN;
+	case PHY_OPC_SHUTDOWN:
+		opecode = BH1750_OPC_POWER_DOWN;
+
 		//m_dev->write(addr, BH1750_CMD_POWER_DOWN, 1);
 		break;
 
-	case PHY_CMD_RESET:
-		opecode = BH1750_CMD_RESET;
+	case PHY_OPC_RESET:
+		opecode = BH1750_OPC_RESET;
 		//m_dev->write(addr, BH1750_CMD_RESET, 1);
 		break;
 
-	case PHY_CMD_INIT:
-		opecode = BH1750_CMD_POWER_ON;
+	case PHY_OPC_INIT:
+		opecode = BH1750_OPC_POWER_ON;
 		//m_dev->write(addr, BH1750_CMD_POWER_ON, 1);
 		break;
 

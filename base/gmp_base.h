@@ -75,6 +75,7 @@ typedef uint8_t gmp_data_t;
 
 // container of a address
 // generally is an unsigned type 
+// in order to support IIC 
 #ifdef GMP_PTRADDR_T
 typedef EM_PTRADDR_T gmp_addr_t;
 #else
@@ -161,6 +162,11 @@ typedef uint_fast16_t gmp_stat_t;
 #define GMP_STAT_HARD_ERROR             (GMP_STAT_ERRO_BEGIN + 4)
 #define GMP_STAT_NOT_IMPL               (GMP_STAT_ERRO_BEGIN + 5)
 
+#define GMP_STAT_COMM_INFO_BEGIN      (0x10000000)
+#define GMP_STAT_COMM_WARN_BEGIN      (0x90000000)
+#define GMP_STAT_COMM_ERRO_BEGIN      (0xD0000000)
+
+
 
 // This macro helps to judge if a status code is a fatal error
 #define IS_GMP_ERROR(_x) ((_x > GMP_STAT_ERRO_BEGIN))
@@ -168,27 +174,10 @@ typedef uint_fast16_t gmp_stat_t;
 #define IS_GMP_WARN(_x) ((_X > GMP_STAT_WARN_BEGIN))
 
 
-#define GMP_STATUS_WARN_TYPE       (0x0001)
-#define GMP_STATUS_ERRO_TYPE       (0x8001)
-
-// This area to define all warnings or errors.
-#define GMP_STATUS_OK				(0x0000)
-#define GMP_STATUS_GENERAL_WARN     (GMP_STATUS_WARN_TYPE + 0)
-#define GMP_STATUS_GENERAL_ERROR	(GMP_STATUS_ERRO_TYPE + 0)
-#define GMP_STATUS_WARN_PRINT       (GMP_STATUS_WARN_TYPE + 1)
-#define GMP_STATUS_UNKNOWN_CMD      (GMP_STATUS_WARN_TYPE + 2)
-
-
-
-
-
 // This area to define all errors.
 // When these error happened, the software usually abort.
 // This value is for unknown fatal error.
-#define GMP_STATUS_FATAL_ERROR	(0xFFFF)
-
-// This macro helps to judge if a status code is a fatal error
-#define IS_GMP_ERROR(x) ((x & 0x8000) != 0)
+#define GMP_STATUS_FATAL_ERROR	(0xFFFFFFFF)
 
 
 #pragma endregion GMP_Status_def
