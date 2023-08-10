@@ -53,8 +53,6 @@ typedef union _tag_phy_state_t
 
 #pragma endregion AS_COMMAND
 
-
-
 // @brief User should implement a set of command of analog sensor.
 // User should derive this class and implement the virtual function `get_src_data()`
 class analog_sensor
