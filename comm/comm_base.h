@@ -1040,6 +1040,7 @@ public:
 // NOTE: This class hasn't been implement correctly.
 #pragma region GPIO_DEVICE_DEF
 
+<<<<<<< HEAD
 
 // @brief This class abstract the whole GPIO to a device.
 // This device may exist only one instance. The GMP library use this class to implement PRC of GPIO.
@@ -1104,6 +1105,8 @@ public:
 };
 
 
+=======
+>>>>>>> stable
 // @brief This class implement a suspended GPIO handle. User may use this handle easily.
 class gpio_port
 {
@@ -1183,6 +1186,72 @@ public:
 
 };
 
+<<<<<<< HEAD
+=======
+// @brief This class abstract the whole GPIO to a device.
+// This device may exist only one instance. The GMP library use this class to implement PRC of GPIO.
+class gpio_dev
+	: public cmd_device
+{
+public:
+	// ctor & dtor
+	gpio_dev()
+	{}
+
+	~gpio_dev()
+	{}
+
+public:
+	// Kernel function
+	/**
+	 * @brief This function set a GPIO to high level.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t set(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function set a GPIO to low level.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t reset(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function change the level of a GPIO.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return if gpio is set or clear.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static gmp_stat_t toggle(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+	/**
+	 * @brief This function read a specified GPIO port.
+	 * @param port_group the gpio group
+	 * @param gpio_index the gpio index
+	 * @return 0 the GPIO has low level, 1 the GPIO has high level,
+	 *	       -1 the read method invalid.
+	 * @author : Javnson
+	 * @date   : 20230723
+	 */
+	static int8_t read(gmp_addr_t port_group, gmp_size_t gpio_index);
+
+public:
+	// This class will implement the cmd function.
+	RESPONSE_CMD
+
+};
+
+
+>>>>>>> stable
 
 
 #pragma endregion GPIO_DEVICE_DEF
