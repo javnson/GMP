@@ -53,6 +53,10 @@ typedef union _tag_phy_state_t
 
 #pragma endregion AS_COMMAND
 
+#pragma endregion AS_COMMAND
+
+
+
 // @brief User should implement a set of command of analog sensor.
 // User should derive this class and implement the virtual function `get_src_data()`
 class analog_sensor
@@ -65,7 +69,11 @@ public:
 	//ctor & dtor
 	analog_sensor()
 	{
+<<<<<<< HEAD:comm/phy_dev_base.h
 		character.all = DEVICE_STATE_CHAR_NULL;
+=======
+
+>>>>>>> cc031c38e28838053134ba58b6ec154ba14c6ed4:comm/physical_dev_base.h
 	}
 
 	~analog_sensor()
