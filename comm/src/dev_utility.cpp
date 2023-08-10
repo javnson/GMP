@@ -2,9 +2,9 @@
 // This file contains all the definition of all utility functions of device.
 
 // EM-LIB basic objects
-//#include <./comm/comm_basic.h>
-#include "../comm_basic.h"
-#include <./base/gmp_base.h>
+#include <comm/comm_base.h>
+//#include "../comm_basic.h"
+#include <base/gmp_base.h>
 
 #ifndef EM_DISABLE_DEVICE_UTILITY
 #include <stdarg.h>

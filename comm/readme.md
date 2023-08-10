@@ -1,3 +1,42 @@
+# GMP module of Communication
+
+The GMP's communication module, known as "comm", offers a collection of streamlined communication routines. 
+This module is structured into multiple classes. 
+These communication classes are tailored to different chips through the BSP.
+
+## command device
+At the core of the library is the command class, that is `cmd_dev`. 
+All the classes are derived from the `cmd_dev` class. 
+The `cmd_dev` class provides a virtual function called `cmd()` which serves as a means of reacting commands. 
+Users can utilize the `cmd_dev::cmd()` function to send messages to an object. 
+The `cmd_dev::cmd()` function has two different prototypes, as shown below:
+
+``` C++
+virtual gmp_stat_t cmd(uint32_t cmd);
+virtual gmp_stat_t cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
+
+```
+
+>  parameter description
+> `cmd` the command index, this command index is a unique 32 bits unsigned int number,
+> which was defined in several header files. Because all the classes has it's unique command.
+> `wparam` (word parameter) is a unsigned int 32 number, as a parameter of the command.
+> `lparam` (long pointer parameter) is a pointer of parameters of command.
+> generally, this parameter point to a predefined structure which contains all the information 
+> that the command need.
+>
+> Majority of command was react by two prototype. When a command doesn't specify a param, usually 
+> the parameter will set as default.
+>
+> return value description
+> 
+
+
+
+
+
+
+
 This module provide plenty of libraries of chip communication. This module may divide into three parts.
 
 + Basement: the implement of communication setup and data transmitting or receiving.

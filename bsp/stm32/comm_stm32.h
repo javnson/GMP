@@ -1,6 +1,6 @@
 
 // platform include file
-#include <comm/comm_basic.h>
+#include <comm/comm_base.h>
 
 // STM32 platform
 #include <bsp/hardware_relative_headers.h>

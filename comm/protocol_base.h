@@ -2,7 +2,7 @@
 #define _FILE_PROTOCOL_BASE_H
 
 // platform header
-#include <comm/comm_basic.h>
+#include <comm/comm_base.h>
 
 
 class protocol_base
