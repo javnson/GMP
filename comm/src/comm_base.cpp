@@ -68,12 +68,12 @@ gmp_fast_t cmd_device::error(uint32_t errcode)
 {
 	// NOTE return 1 to stop the process
 	//      return 0 to ignore the process
-	
+
 	// global information counter
 	g_info_cnt += 1;
 
 	// Part 1 Some special code
-		
+
 	// Some fatal error has happened, so user should figure them out first.
 	if (errcode == DEVICE_ERR_COND)
 	{
@@ -89,11 +89,11 @@ gmp_fast_t cmd_device::error(uint32_t errcode)
 
 	// Part 2 General error
 
-	if(errcode >= DEVICE_ERRO_BEGIN) // error
+	if (errcode >= DEVICE_ERRO_BEGIN) // error
 	{
 		if (get_verbose() >= DEVICE_STATE_VERBOSE_ERROR)
 			gmp_print("[erro.%d]\t general ERROR happened, error code: %d.\r\n",
-				g_info_cnt ,errcode);
+				g_info_cnt, errcode);
 
 		erro_cond = 1;
 		g_erro_cnt += 1;
@@ -104,9 +104,9 @@ gmp_fast_t cmd_device::error(uint32_t errcode)
 	else if (errcode >= DEVICE_WARN_BEGIN) // warning
 	{
 		if (get_verbose() >= DEVICE_STATE_VERBOSE_WARNING)
-			gmp_print("[warn.%d]\t general WARNING happened, warning code: %d.\r\n", 
+			gmp_print("[warn.%d]\t general WARNING happened, warning code: %d.\r\n",
 				g_info_cnt, errcode);
-		
+
 		g_warn_cnt += 1;
 
 		m_last_error = errcode;
@@ -169,7 +169,8 @@ gmp_diff_t io_device_base::write(_IN gmp_addr_t addr, _IN gmp_data_t* data, gmp_
 	return write_ex(addr, data, length);
 }
 
-gmp_diff_t read_write(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity, gmp_size_t length)
+
+gmp_diff_t io_device_base::read_write(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity, gmp_size_t length)
 {
 	gmp_assert(data != nullptr);
 	//gmp_assert(m_dev != nullptr);
@@ -189,14 +190,14 @@ gmp_diff_t read_write(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t cap
 
 
 
-void io_device_base::refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
-{
+//void io_device_base::refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+//{
 	// print function 
 //	if (m_state.bits.verbose >= DEVICE_STATE_VERBOSE_2)
 //	{
 //		gmp_print(_TEXT("[INFO] The default refuse function has been called."));
 //	}
-}
+//}
 
 
 gmp_stat_t io_device_base::cmd(uint32_t cmd)
@@ -219,7 +220,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 		//    or for any physical device, user should send reset signal. 
 		// 3. For any software, user should clear software constrains.
 		// And if user find any fatal error, user should return a non-zero value.
-		
+
 		// Step 1 update state machine
 		if (erro_cond)
 		{
@@ -252,11 +253,24 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 
 		break;
 	case DEVICE_CMD_INIT:
-		
+		// If device has been inited or device still has error, init function shouldn't be called.
+		if (m_state.bits.state_machine != DEVICE_STATE_SHUTDOWN)
+		{
+			// warning : this function duplicated invoked
+			warning(DEVICE_ERR_CANNOT_INIT);
+
+			// ignore this warning
+			return;
+		}
+		else
+		{
+			// Update device state machine
+			m_state.bits.state_machine = DEVICE_STATE_READY;
+		}
 
 		break;
 	case DEVICE_CMD_SHUTDOWN:
-		
+
 
 		break;
 	case DEVICE_CMD_PNP_TEST:
@@ -309,7 +323,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lpar
 }
 
 
-gmp_diff_t io_device_base::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length)
+gmp_diff_t io_device_base::read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity, gmp_size_t length)
 {
 	memcpy((gmp_data_t*)m_dev + addr, (gmp_data_t*)data, length);
 
@@ -391,6 +405,121 @@ gmp_stat_t io_device_base::shutdown()
 	return GMP_STAT_OK;
 }
 
+gmp_stat_t io_device_base::chg_dev_stat(uint8_t target_stat)
+{
+	// call state machine change callback 
+
+
+	// the target state
+	// NOTE: Sort by execution priority
+	switch (target_stat)
+	{
+	case DEVICE_STATE_BUSY:
+		if (m_state == DEVICE_STATE_READY)
+			m_state = DEVICE_STATE_BUSY;
+		else if (m_state == DEVICE_STATE_BUSY)
+		{
+			if (error(DEVICE_ERR_STATE_NOT_CHG))
+				return DEVICE_ERR_STATE_NOT_CHG;
+		}
+		else
+		{
+			if (error(DEVICE_ERR_NOT_READY))
+				return DEVICE_ERR_NOT_READY;
+		}
+		return DEVICE_OK;
+
+	case DEVICE_STATE_READY:
+		if (m_state == DEVICE_STATE_SHUTDOWN ||
+			m_state == DEVICE_STATE_CONFIG ||
+			m_state == DEVICE_STATE_LOWPOWER)
+			m_state = DEVICE_STATE_READY;
+		else if (m_state == DEVICE_STATE_READY)
+		{
+			if (error(DEVICE_ERR_STATE_NOT_CHG))
+				return DEVICE_ERR_STATE_NOT_CHG;
+		}
+		else
+		{
+			if (error(DEVICE_ERR_CANNOT_INIT))
+				return DEVICE_ERR_CANNOT_INIT;
+		}
+
+		return DEVICE_OK;
+
+	case DEVICE_STATE_SHUTDOWN:
+		if (m_state == DEVICE_STATE_READY ||
+			m_state == DEVICE_STATE_CONFIG)
+			m_state = DEVICE_STATE_SHUTDOWN;
+		else if (m_state == DEVICE_STATE_SHUTDOWN)
+		{
+			if (error(DEVICE_ERR_STATE_NOT_CHG))
+				return DEVICE_ERR_STATE_NOT_CHG;
+		}
+		else if (m_state == DEVICE_STATE_BUSY)
+		{
+			if (error(DEVICE_ERR_BUSY))
+				return DEVICE_ERR_BUSY;
+		}
+		else
+		{
+			if (error(DEVICE_ERR_CANNOT_SHUTDOWN))
+				return DEVICE_ERR_CANNOT_SHUTDOWN;
+		}
+
+		return DEVICE_OK;
+
+	case DEVICE_STATE_CONFIG:
+		if (m_state == DEVICE_STATE_READY ||
+			m_state == DEVICE_STATE_SHUTDOWN)
+			m_state = DEVICE_STATE_CONFIG;
+		else if (m_state == DEVICE_STATE_CONFIG)
+		{
+			if (error(DEVICE_ERR_STATE_NOT_CHG))
+				return DEVICE_ERR_STATE_NOT_CHG;
+		}
+		else if(m_state == DEVICE_STATE_BUSY)
+		{
+			if (error(DEVICE_ERR_BUSY))
+				return DEVICE_ERR_BUSY;
+		}
+		else
+		{
+			if (error(DEVICE_ERR_CANNOT_CONFIG))
+				return DEVICE_ERR_CANNOT_CONFIG;
+		}
+		
+		return DEVICE_OK;
+
+	case DEVICE_STATE_LOWPOWER:
+		if (m_state == DEVICE_STATE_READY ||
+			m_state == DEVICE_STATE_CONFIG)
+			m_state = DEVICE_STATE_LOWPOWER;
+		else if (m_state = DEVICE_STATE_LOWPOWER)
+		{
+			if (error(DEVICE_ERR_STATE_NOT_CHG))
+				return DEVICE_ERR_STATE_NOT_CHG;
+		}
+		else if (m_state == DEVICE_STATE_BUSY)
+		{
+			if (error(DEVICE_ERR_BUSY))
+				return DEVICE_ERR_BUSY;
+		}
+		else
+		{
+			if (error(DEVICE_ERR_CANNOT_CONFIG))
+				return DEVICE_ERR_CANNOT_LOWPOWER;
+		}
+
+		return DEVICE_OK;
+
+	default:
+		break;
+	}
+
+	return DEVICE_ERR_UNKNOWN_STAT_TRANS;
+}
+
 #pragma endregion io_device_base_source
 
 //////////////////////////////////////////////////////////////////////////
@@ -452,22 +581,22 @@ gmp_diff_t i2c_device::write_ex(gmp_addr_t addr, gmp_data_t* data, gmp_size_t le
 // GPIO device
 gmp_stat_t gpio_dev::set(gmp_addr_t port_group, gmp_size_t gpio_index)
 {
-	return gmp_gpio_set(port_group,gpio_index);
+	return gmp_gpio_set(port_group, gpio_index);
 }
 
 gmp_stat_t gpio_dev::reset(gmp_addr_t port_group, gmp_size_t gpio_index)
 {
-	return gmp_gpio_reset(port_group,gpio_index);
+	return gmp_gpio_reset(port_group, gpio_index);
 }
 
 gmp_stat_t gpio_dev::toggle(gmp_addr_t port_group, gmp_size_t gpio_index)
 {
-	return gmp_gpio_toggle(port_group,gpio_index);
+	return gmp_gpio_toggle(port_group, gpio_index);
 }
 
 int8_t gpio_dev::read(gmp_addr_t port_group, gmp_size_t gpio_index)
 {
-	return gmp_gpio_read(port_group,gpio_index);
+	return gmp_gpio_read(port_group, gpio_index);
 }
 
 

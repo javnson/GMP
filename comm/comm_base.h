@@ -193,7 +193,12 @@ typedef uint32_t gmp_device_cmd;
 #define DEVICE_ERR_TIMEOUT			  (DEVICE_WARN_BEGIN + 0x001B)
 #define DEVICE_ERR_NULL_DEV_HANDLE    (DEVICE_ERRO_BEGIN + 0x001C)
 #define DEVICE_ERR_HAVE_INITED        (DEVICE_INFO_BEGIN + 0x001D)
-
+#define DEVICE_ERR_BUSY               (DEVICE_WARN_BEGIN + 0x001E)
+#define DEVICE_ERR_STATE_NOT_CHG      (DEVICE_INFO_BEGIN + 0x001F)
+#define DEVICE_ERR_CANNOT_SHUTDOWN    (DEVICE_WARN_BEGIN + 0x0020)
+#define DEVICE_ERR_CANNOT_CONFIG      (DEVICE_WARN_BEGIN + 0x0021)
+#define DEVICE_ERR_CANNOT_LOWPOWER    (DEVICE_WARN_BEGIN + 0x0022)
+#define DEVICE_ERR_UNKNOWN_STAT_TRANS (DEVICE_WARN_BEGIN + 0x0023)
 
 // @brief device still in error condition. User should free from the error condition.
 #define DEVICE_ERR_COND               (DEVICE_ERRO_BEGIN + 0x00FD)
@@ -211,7 +216,7 @@ typedef uint32_t gmp_device_cmd;
 		virtual gmp_stat_t cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam);
 
 #define RESPONSE_RW      protected:               \
-		virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t cap, gmp_size_t len = 0); \
+		virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity, gmp_size_t length);\
 		virtual gmp_diff_t write_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 // Check if device still in error condition and think err_cond should resolve first.
@@ -301,6 +306,14 @@ public:
 	 * @date   : 20230606
 	 */
 	virtual gmp_stat_t cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lparam) = 0;
+
+	/**
+	 * @brief This function are called when any class state changes.
+	 * @return null
+	 * @author : Javnson
+	 * @date   : 20230810
+	 */
+//	virtual gmp_stat_t callback()
 
 public:
 	// utilities
@@ -502,6 +515,7 @@ public: // Core functions
 	 * @date   : 20230605
 	 */
 	 //gmp_diff_t read(_OUT gmp_data_t* data, gmp_size_t length);
+
 	 /**
 	  * @brief write a string of message for the device, which will call write_ex to fulfill the task.
 	  *        based on the position of m_pos, you may change the position by seek.
@@ -534,7 +548,8 @@ protected: // core virtual function
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+	virtual gmp_diff_t read_ex(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t capacity, gmp_size_t length);
+
 	/**
 	 * @brief write a string of message for the device, which will call write_ex to fulfill the task.
 	 * @param addr the address for the device
@@ -557,7 +572,7 @@ protected: // core virtual function
 	 * @author : Javnson
 	 * @date   : 20230605
 	 */
-	virtual void refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
+//	virtual void refuse(_IN gmp_addr_t addr, _OUT gmp_data_t* data, gmp_size_t length);
 
 public:
 	/**
@@ -746,6 +761,16 @@ protected:
 	{
 		m_state.bits.pnp = pnp_state;
 	}
+
+	/**
+	 * @brief (change device state) 
+	 *        This function change device state machine to the target state.
+	 * @param target_stat: target state.
+	 * @return null
+	 * @author : Javnson
+	 * @date   : 20230810
+	 */
+	gmp_stat_t chg_dev_stat(uint8_t target_stat);
 
 
 public:
