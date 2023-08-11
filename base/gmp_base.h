@@ -142,7 +142,7 @@ typedef uint_least32_t gmp_param_t;
 typedef GMP_STATUS_T gmp_stat_t;
 #else
 typedef uint_fast16_t gmp_stat_t;
-#define gmp_status_s ((sizeof(uint_fast16_t)))
+#define gmp_stat_s ((sizeof(uint_fast16_t)))
 #endif
 
 
