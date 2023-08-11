@@ -623,6 +623,46 @@ gmp_fast_t io_device_base::is_writeable()
 	return 1;
 }
 
+gmp_stat_t io_device_base::chg_dev_stat(uint8_t target_stat)
+{
+	// call state machine change callback 
+
+
+	// the target state
+	// NOTE: Sort by execution priority
+	switch (target_stat)
+	{
+	case DEVICE_STATE_BUSY:
+		if (m_state == DEVICE_STATE_READY)
+			m_state = DEVICE_STATE_BUSY;
+		else if (m_state == DEVICE_STATE_BUSY)
+		{
+			if (error(DEVICE_ERR_STATE_NOT_CHG))
+				return DEVICE_ERR_STATE_NOT_CHG;
+		}
+		else
+		{
+			if (error(DEVICE_ERR_NOT_READY))
+				return DEVICE_ERR_NOT_READY;
+		}
+		return DEVICE_OK;
+
+	case DEVICE_STATE_READY:
+		if (m_state == DEVICE_STATE_SHUTDOWN ||
+			m_state == DEVICE_STATE_CONFIG ||
+			m_state == DEVICE_STATE_LOWPOWER)
+			m_state = DEVICE_STATE_READY;
+		else if (m_state == DEVICE_STATE_READY)
+		{
+			if (error(DEVICE_ERR_STATE_NOT_CHG))
+				return DEVICE_ERR_STATE_NOT_CHG;
+		}
+		else
+		{
+			if (error(DEVICE_ERR_CANNOT_INIT))
+				return DEVICE_ERR_CANNOT_INIT;
+		}
+
 
 //gmp_stat_t io_device_base::chg_dev_stat(uint8_t target_stat)
 //{
