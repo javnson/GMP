@@ -223,7 +223,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 	// More emergency, more ahead
 	switch (cmd)
 	{
-	case GMPDEVCMD_UNLOCK:
+	case GMPDEV_CMD_UNLOCK:
 #if defined GMP_DEV_DISABLE_LOCK
 		if (error(GMPDEV_ERR_UNSUPPORT_LOCK))
 			return GMPDEV_ERR_UNSUPPORT_LOCK;
@@ -233,7 +233,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 #endif
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_LOCK:
+	case GMPDEV_CMD_LOCK:
 #if defined GMP_DEV_DISABLE_LOCK
 		if (error(GMPDEV_ERR_UNSUPPORT_LOCK))
 			return GMPDEV_ERR_UNSUPPORT_LOCK;
@@ -243,7 +243,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 #endif
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_RESET:
+	case GMPDEV_CMD_RESET:
 		// Step 0 User must do first
 		// 1. User should stop any operation, so busy state will release.
 		// 2. For any peripheral, user should clear all the error flag;
@@ -273,7 +273,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_READY:
+	case GMPDEV_CMD_READY:
 		// step 0 user should complete all the preparing firstly.
 
 		// step 1 judge if device still in error state. 
@@ -303,7 +303,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_ENABLE:
+	case GMPDEV_CMD_ENABLE:
 		// step 0 User should startup the peripheral firstly
 
 		// step 1 judge if device still in error state
@@ -333,7 +333,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_SHUTDOWN:
+	case GMPDEV_CMD_SHUTDOWN:
 		// step 0 User should stop the device firstly.
 
 		// step 1 judge if device still in error state
@@ -362,7 +362,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_SUSPEND:
+	case GMPDEV_CMD_SUSPEND:
 		// step 0 user should do something to prepare config mode.
 
 		// step 1 judge if device still in error state
@@ -390,7 +390,7 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_STANDBY:
+	case GMPDEV_CMD_STANDBY:
 		// step 0 user should do something to prepare config mode.
 
 		// step 1 judge if device still in error state
@@ -419,11 +419,11 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd)
 
 		return GMPDEV_OK;
 
-	case GMPDEVCMD_PNP_TEST:
+	case GMPDEV_CMD_PNP_TEST:
 		// do nothing
 
 		return GMPDEV_OK;
-	case GMPDEVCMD_PNP_EJECT:
+	case GMPDEV_CMD_PNP_EJECT:
 		// do nothing
 
 		return GMPDEV_OK;
@@ -437,29 +437,29 @@ gmp_stat_t io_device_base::cmd(uint32_t cmd, gmp_param_t wparam, gmp_addr_t lpar
 {
 	switch (cmd)
 	{
-	case GMPDEVCMD_REGISTER:
+	case GMPDEV_CMD_REGISTER:
 		// wParam: device base address
 		// TODO this function shouldn't be called another time.
 		m_dev = (void*)wparam;
 
-		return DEVICE_OK;
+		return GMPDEV_OK;
 
 
-	case GMPDEVCMD_STANDBY:
-	case GMPDEVCMD_SUSPEND:
-	case GMPDEVCMD_SHUTDOWN:
-	case GMPDEVCMD_RESET:
-	case GMPDEVCMD_READY:
-	case GMPDEVCMD_ENABLE:
+	case GMPDEV_CMD_STANDBY:
+	case GMPDEV_CMD_SUSPEND:
+	case GMPDEV_CMD_SHUTDOWN:
+	case GMPDEV_CMD_RESET:
+	case GMPDEV_CMD_READY:
+	case GMPDEV_CMD_ENABLE:
 
 		// call the specified function without virtual
 		return cmd_device::cmd(cmd);
 
-	case GMPDEVCMD_PNP_TEST:
+	case GMPDEV_CMD_PNP_TEST:
 		// do nothing
 
 		return GMPDEV_OK;
-	case GMPDEVCMD_PNP_EJECT:
+	case GMPDEV_CMD_PNP_EJECT:
 		// do nothing
 
 		return GMPDEV_OK;

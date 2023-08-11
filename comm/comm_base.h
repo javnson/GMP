@@ -379,7 +379,7 @@ typedef union _tag_device_state
 #define GMPDEV_STAT_PNP_EJECT       (0x03)
 
 // io_device_base::gmp_device_state_t::bits::rpc
-#define GMPDEV_STAT_RPC_DISABLE    (0x00) // disable RPC
+#define GMPDEV_STAT_RPC_DISABLE     (0x00) // disable RPC
 
 typedef union _tag_dev_char_t
 {
@@ -423,7 +423,7 @@ protected:
 	void* m_dev;
 
 	// @brief device state machine
-	gmp_GMPDEV_STAT_t m_state;
+	gmp_stat_t m_state;
 
 	// @brief This variable describe the character of the device.
 	// 0 is not permit, 1 is permit
@@ -763,7 +763,7 @@ public:
 
 	}
 	/**
-	 * @brief Ctor with params, pass device address for the UART device.
+	 * @brief Ctor with parameters, pass device address for the UART device.
 	 * @param device_addr is the device base address.
 	 * @return None
 	 * @author : Javnson
@@ -810,6 +810,8 @@ protected:
 	// This class will implement the cmd function.
 	RESPONSE_CMD
 
+	// TODO here need to add an additional callback function 
+	// in order to deal with message receive or transmitting.
 
 public:
 
