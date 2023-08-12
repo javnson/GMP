@@ -4,6 +4,7 @@
 // general manage function - general control configures
 
 class dev_mgr
+	:public cmd_device
 {
 public:
 	// ctor & dtor
@@ -26,6 +27,9 @@ public:
 
 public:
 	// utilities
+
+public:
+	// members
 
 
 };
