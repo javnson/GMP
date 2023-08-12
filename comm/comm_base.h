@@ -381,6 +381,7 @@ typedef union _tag_device_state
 // io_device_base::gmp_device_state_t::bits::rpc
 #define GMPDEV_STAT_RPC_DISABLE     (0x00) // disable RPC
 
+
 typedef union _tag_dev_char_t
 {
 	struct
@@ -424,6 +425,7 @@ protected:
 
 	// @brief device state machine
 	gmp_stat_t m_state;
+
 
 	// @brief This variable describe the character of the device.
 	// 0 is not permit, 1 is permit
